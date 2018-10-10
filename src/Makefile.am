@@ -70,6 +70,7 @@ endif
 .PHONY: FORCE
 # maza core #
 BITCOIN_CORE_H = \
+  activemasternode.h \
   addrman.h \
   alert.h \
   allocators.h \
@@ -91,16 +92,26 @@ BITCOIN_CORE_H = \
   primitives/transaction.h \
   core_io.h \
   crypter.h \
+  darksend.h \
+  darksend-relay.h \
   db.h \
   eccryptoverify.h \
   ecwrapper.h \
   hash.h \
   init.h \
+  instantx.h \
   key.h \
+  keepass.h \
   keystore.h \
   leveldbwrapper.h \
   limitedmap.h \
   main.h \
+  masternode.h \
+  masternode-payments.h \
+  masternode-budget.h \
+  masternode-sync.h \
+  masternodeman.h \
+  masternodeconfig.h \
   merkleblock.h \
   miner.h \
   mruset.h \
@@ -121,6 +132,7 @@ BITCOIN_CORE_H = \
   script/standard.h \
   script/script_error.h \
   serialize.h \
+  spork.h \
   streams.h \
   sync.h \
   threadsafety.h \
@@ -158,7 +170,7 @@ obj/build.h: FORCE
 	  $(abs_top_srcdir)
 libmaza_util_a-clientversion.$(OBJEXT): obj/build.h
 
-# server: shared between bitcoind and bitcoin-qt
+# server: shared between dashd and dash-qt
 libmaza_server_a_CPPFLAGS = $(BITCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS)
 libmaza_server_a_SOURCES = \
   addrman.cpp \
@@ -176,6 +188,8 @@ libmaza_server_a_SOURCES = \
   pow.cpp \
   rest.cpp \
   rpcblockchain.cpp \
+  rpcmasternode.cpp \
+  rpcmasternode-budget.cpp \
   rpcmining.cpp \
   rpcmisc.cpp \
   rpcnet.cpp \
@@ -192,13 +206,24 @@ libmaza_server_a_SOURCES = \
 # when wallet enabled
 libmaza_wallet_a_CPPFLAGS = $(BITCOIN_INCLUDES)
 libmaza_wallet_a_SOURCES = \
+  activemasternode.cpp \
+  darksend.cpp \
+  darksend-relay.cpp \
   db.cpp \
   crypter.cpp \
+  instantx.cpp \
+  masternode.cpp \
+  masternode-budget.cpp \
+  masternode-payments.cpp \
+  masternode-sync.cpp \
+  masternodeconfig.cpp \
+  masternodeman.cpp \
   rpcdump.cpp \
   rpcwallet.cpp \
   wallet.cpp \
   wallet_ismine.cpp \
   walletdb.cpp \
+  keepass.cpp \
   $(BITCOIN_CORE_H)
 
 # crypto primitives library
@@ -211,6 +236,18 @@ crypto_libmaza_crypto_a_SOURCES = \
   crypto/rfc6979_hmac_sha256.cpp \
   crypto/hmac_sha512.cpp \
   crypto/ripemd160.cpp \
+  crypto/aes_helper.c \
+  crypto/blake.c \
+  crypto/bmw.c \
+  crypto/cubehash.c \
+  crypto/echo.c \
+  crypto/groestl.c \
+  crypto/jh.c \
+  crypto/keccak.c \
+  crypto/luffa.c \
+  crypto/shavite.c \
+  crypto/simd.c \
+  crypto/skein.c \
   crypto/common.h \
   crypto/sha256.h \
   crypto/sha512.h \
@@ -218,7 +255,19 @@ crypto_libmaza_crypto_a_SOURCES = \
   crypto/rfc6979_hmac_sha256.h \
   crypto/hmac_sha512.h \
   crypto/sha1.h \
-  crypto/ripemd160.h
+  crypto/ripemd160.h \
+  crypto/sph_blake.h \
+  crypto/sph_bmw.h \
+  crypto/sph_cubehash.h \
+  crypto/sph_echo.h \
+  crypto/sph_groestl.h \
+  crypto/sph_jh.h \
+  crypto/sph_keccak.h \
+  crypto/sph_luffa.h \
+  crypto/sph_shavite.h \
+  crypto/sph_simd.h \
+  crypto/sph_skein.h \
+  crypto/sph_types.h
 
 # univalue JSON library
 univalue_libmaza_univalue_a_SOURCES = \
@@ -254,6 +303,7 @@ libmaza_common_a_SOURCES = \
   script/sign.cpp \
   script/standard.cpp \
   script/script_error.cpp \
+  spork.cpp \
   $(BITCOIN_CORE_H)
 
 # util: shared between all executables.
@@ -261,6 +311,7 @@ libmaza_common_a_SOURCES = \
 # backward-compatibility objects and their sanity checks are linked.
 libmaza_util_a_CPPFLAGS = $(BITCOIN_INCLUDES)
 libmaza_util_a_SOURCES = \
+  allocators.cpp \
   compat/strnlen.cpp \
   compat/glibc_sanity.cpp \
   compat/glibcxx_sanity.cpp \
@@ -352,6 +403,7 @@ maza_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 if BUILD_BITCOIN_LIBS
 include_HEADERS = script/bitcoinconsensus.h
 libmazaconsensus_la_SOURCES = \
+  allocators.cpp \
   primitives/transaction.cpp \
   crypto/hmac_sha512.cpp \
   crypto/sha1.cpp \

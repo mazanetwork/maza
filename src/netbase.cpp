@@ -4,7 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifdef HAVE_CONFIG_H
-#include "config/bitcoin-config.h"
+#include "config/dash-config.h"
 #endif
 
 #include "netbase.h"
@@ -267,6 +267,9 @@ bool static InterruptibleRecv(char* data, size_t len, int timeout, SOCKET& hSock
         } else { // Other error or blocking
             int nErr = WSAGetLastError();
             if (nErr == WSAEINPROGRESS || nErr == WSAEWOULDBLOCK || nErr == WSAEINVAL) {
+                if (!IsSelectableSocket(hSocket)) {
+                    return false;
+                }
                 struct timeval tval = MillisToTimeval(std::min(endTime - curTime, maxWait));
                 fd_set fdset;
                 FD_ZERO(&fdset);
@@ -824,17 +827,20 @@ enum Network CNetAddr::GetNetwork() const
     return NET_IPV6;
 }
 
-std::string CNetAddr::ToStringIP() const
+std::string CNetAddr::ToStringIP(bool fUseGetnameinfo) const
 {
     if (IsTor())
         return EncodeBase32(&ip[6], 10) + ".onion";
-    CService serv(*this, 0);
-    struct sockaddr_storage sockaddr;
-    socklen_t socklen = sizeof(sockaddr);
-    if (serv.GetSockAddr((struct sockaddr*)&sockaddr, &socklen)) {
-        char name[1025] = "";
-        if (!getnameinfo((const struct sockaddr*)&sockaddr, socklen, name, sizeof(name), NULL, 0, NI_NUMERICHOST))
-            return std::string(name);
+    if (fUseGetnameinfo)
+    {
+        CService serv(*this, 0);
+        struct sockaddr_storage sockaddr;
+        socklen_t socklen = sizeof(sockaddr);
+        if (serv.GetSockAddr((struct sockaddr*)&sockaddr, &socklen)) {
+            char name[1025] = "";
+            if (!getnameinfo((const struct sockaddr*)&sockaddr, socklen, name, sizeof(name), NULL, 0, NI_NUMERICHOST))
+                return std::string(name);
+        }
     }
     if (IsIPv4())
         return strprintf("%u.%u.%u.%u", GetByte(3), GetByte(2), GetByte(1), GetByte(0));
@@ -1171,18 +1177,18 @@ std::string CService::ToStringPort() const
     return strprintf("%u", port);
 }
 
-std::string CService::ToStringIPPort() const
+std::string CService::ToStringIPPort(bool fUseGetnameinfo) const
 {
     if (IsIPv4() || IsTor()) {
-        return ToStringIP() + ":" + ToStringPort();
+        return ToStringIP(fUseGetnameinfo) + ":" + ToStringPort();
     } else {
-        return "[" + ToStringIP() + "]:" + ToStringPort();
+        return "[" + ToStringIP(fUseGetnameinfo) + "]:" + ToStringPort();
     }
 }
 
-std::string CService::ToString() const
+std::string CService::ToString(bool fUseGetnameinfo) const
 {
-    return ToStringIPPort();
+    return ToStringIPPort(fUseGetnameinfo);
 }
 
 void CService::SetPort(unsigned short portIn)
@@ -1214,15 +1220,15 @@ CSubNet::CSubNet(const std::string &strSubnet, bool fAllowLookup)
             std::string strNetmask = strSubnet.substr(slash + 1);
             int32_t n;
             // IPv4 addresses start at offset 12, and first 12 bytes must match, so just offset n
-            int noffset = network.IsIPv4() ? (12 * 8) : 0;
+            const int astartofs = network.IsIPv4() ? 12 : 0;
             if (ParseInt32(strNetmask, &n)) // If valid number, assume /24 symtex
             {
-                if(n >= 0 && n <= (128 - noffset)) // Only valid if in range of bits of address
+                if(n >= 0 && n <= (128 - astartofs*8)) // Only valid if in range of bits of address
                 {
-                    n += noffset;
+                    n += astartofs*8;
                     // Clear bits [n..127]
                     for (; n < 128; ++n)
-                        netmask[n>>3] &= ~(1<<(n&7));
+                        netmask[n>>3] &= ~(1<<(7-(n&7)));
                 }
                 else
                 {
@@ -1233,12 +1239,10 @@ CSubNet::CSubNet(const std::string &strSubnet, bool fAllowLookup)
             {
                 if (LookupHost(strNetmask.c_str(), vIP, 1, false)) // Never allow lookup for netmask
                 {
-                    // Remember: GetByte returns bytes in reversed order
                     // Copy only the *last* four bytes in case of IPv4, the rest of the mask should stay 1's as
                     // we don't want pchIPv4 to be part of the mask.
-                    int asize = network.IsIPv4() ? 4 : 16;
-                    for(int x=0; x<asize; ++x)
-                        netmask[15-x] = vIP[0].GetByte(x);
+                    for(int x=astartofs; x<16; ++x)
+                        netmask[x] = vIP[0].ip[x];
                 }
                 else
                 {
@@ -1251,6 +1255,10 @@ CSubNet::CSubNet(const std::string &strSubnet, bool fAllowLookup)
     {
         valid = false;
     }
+
+    // Normalize network according to netmask
+    for(int x=0; x<16; ++x)
+        network.ip[x] &= netmask[x];
 }
 
 bool CSubNet::Match(const CNetAddr &addr) const
@@ -1258,7 +1266,7 @@ bool CSubNet::Match(const CNetAddr &addr) const
     if (!valid || !addr.IsValid())
         return false;
     for(int x=0; x<16; ++x)
-        if ((addr.GetByte(x) & netmask[15-x]) != network.GetByte(x))
+        if ((addr.ip[x] & netmask[x]) != network.ip[x])
             return false;
     return true;
 }

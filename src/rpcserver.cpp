@@ -1,5 +1,6 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2014-2015 The Dash developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -262,6 +263,7 @@ static const CRPCCommand vRPCCommands[] =
     { "blockchain",         "getblockcount",          &getblockcount,          true,      false,      false },
     { "blockchain",         "getblock",               &getblock,               true,      false,      false },
     { "blockchain",         "getblockhash",           &getblockhash,           true,      false,      false },
+    { "blockchain",         "getblockheader",         &getblockheader,         false,     false,      false },
     { "blockchain",         "getchaintips",           &getchaintips,           true,      false,      false },
     { "blockchain",         "getdifficulty",          &getdifficulty,          true,      false,      false },
     { "blockchain",         "getmempoolinfo",         &getmempoolinfo,         true,      true,       false },
@@ -306,7 +308,18 @@ static const CRPCCommand vRPCCommands[] =
     { "hidden",             "reconsiderblock",        &reconsiderblock,        true,      true,       false },
     { "hidden",             "setmocktime",            &setmocktime,            true,      false,      false },
 
+    /* Dash features */
+    { "dash",               "masternode",             &masternode,             true,      true,       false },
+    { "dash",               "masternodelist",         &masternodelist,         true,      true,       false },
+    { "dash",               "masternodebroadcast",    &masternodebroadcast,    true,      true,       false },
+    { "dash",               "mnbudget",               &mnbudget,               true,      true,       false },
+    { "dash",               "mnbudgetvoteraw",        &mnbudgetvoteraw,        true,      true,       false },
+    { "dash",               "mnfinalbudget",          &mnfinalbudget,          true,      true,       false },
+    { "dash",               "mnsync",                 &mnsync,                 true,      true,       false },
+    { "dash",               "spork",                  &spork,                  true,      true,       false },
 #ifdef ENABLE_WALLET
+    { "dash",               "darksend",               &darksend,               false,     false,      true  }, /* not threadSafe because of SendMoney */
+
     /* Wallet */
     { "wallet",             "addmultisigaddress",     &addmultisigaddress,     true,      false,      true },
     { "wallet",             "backupwallet",           &backupwallet,           true,      false,      true },
@@ -328,6 +341,7 @@ static const CRPCCommand vRPCCommands[] =
     { "wallet",             "importwallet",           &importwallet,           true,      false,      true },
     { "wallet",             "importaddress",          &importaddress,          true,      false,      true },
     { "wallet",             "keypoolrefill",          &keypoolrefill,          true,      false,      true },
+    { "wallet",             "keepass",                &keepass,                false,     false,      true },
     { "wallet",             "listaccounts",           &listaccounts,           false,     false,      true },
     { "wallet",             "listaddressgroupings",   &listaddressgroupings,   false,     false,      true },
     { "wallet",             "listlockunspent",        &listlockunspent,        false,     false,      true },
@@ -341,6 +355,7 @@ static const CRPCCommand vRPCCommands[] =
     { "wallet",             "sendfrom",               &sendfrom,               false,     false,      true },
     { "wallet",             "sendmany",               &sendmany,               false,     false,      true },
     { "wallet",             "sendtoaddress",          &sendtoaddress,          false,     false,      true },
+    { "wallet",             "sendtoaddressix",        &sendtoaddressix,        false,     false,      true },
     { "wallet",             "setaccount",             &setaccount,             true,      false,      true },
     { "wallet",             "settxfee",               &settxfee,               true,      false,      true },
     { "wallet",             "signmessage",            &signmessage,            true,      false,      true },
@@ -672,6 +687,7 @@ void StartRPCThreads()
 
             RPCListen(acceptor, *rpc_ssl_context, fUseSSL);
 
+            rpc_acceptors.push_back(acceptor);
             fListening = true;
             rpc_acceptors.push_back(acceptor);
             // If dual IPv6/IPv4 bind successful, skip binding to IPv4 separately
@@ -1003,8 +1019,17 @@ json_spirit::Value CRPCTable::execute(const std::string &strMethod, const json_s
                 LOCK(cs_main);
                 result = pcmd->actor(params, false);
             } else {
-                LOCK2(cs_main, pwalletMain->cs_wallet);
-                result = pcmd->actor(params, false);
+                while (true) {
+                    TRY_LOCK(cs_main, lockMain);
+                    if(!lockMain) { MilliSleep(50); continue; }
+                    while (true) {
+                        TRY_LOCK(pwalletMain->cs_wallet, lockWallet);
+                        if(!lockMain) { MilliSleep(50); continue; }
+                        result = pcmd->actor(params, false);
+                        break;
+                    }
+                    break;
+                }
             }
 #else // ENABLE_WALLET
             else {
@@ -1027,7 +1052,7 @@ std::string HelpExampleCli(string methodname, string args){
 
 std::string HelpExampleRpc(string methodname, string args){
     return "> curl --user myusername --data-binary '{\"jsonrpc\": \"1.0\", \"id\":\"curltest\", "
-        "\"method\": \"" + methodname + "\", \"params\": [" + args + "] }' -H 'content-type: text/plain;' http://127.0.0.1:8332/\n";
+        "\"method\": \"" + methodname + "\", \"params\": [" + args + "] }' -H 'content-type: text/plain;' http://127.0.0.1:9998/\n";
 }
 
 const CRPCTable tableRPC;

@@ -7,7 +7,7 @@
 #define BITCOIN_COMPAT_H
 
 #if defined(HAVE_CONFIG_H)
-#include "config/bitcoin-config.h"
+#include "config/dash-config.h"
 #endif
 
 #ifdef WIN32
@@ -89,5 +89,13 @@ typedef u_int SOCKET;
 #endif
 
 size_t strnlen_int( const char *start, size_t max_len);
+
+bool static inline IsSelectableSocket(SOCKET s) {
+#ifdef WIN32
+    return true;
+#else
+    return (s < FD_SETSIZE);
+#endif
+}
 
 #endif // BITCOIN_COMPAT_H

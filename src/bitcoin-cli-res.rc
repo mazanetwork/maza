@@ -16,6 +16,7 @@ BEGIN
     BEGIN
         BLOCK "040904E4" // U.S. English - multilingual (hex)
         BEGIN
+<<<<<<< HEAD:src/bitcoin-cli-res.rc
             VALUE "CompanyName",        "Maza"
             VALUE "FileDescription",    "Maza-cli (OSS RPC client for Maza)"
             VALUE "FileVersion",        VER_FILEVERSION_STR

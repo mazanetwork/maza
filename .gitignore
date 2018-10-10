@@ -1,3 +1,8 @@
+*.sublime-project
+*.sublime-workspace
+todo.txt
+reset-files.bash
+
 *.tar.gz
 
 *.exe
@@ -29,8 +34,8 @@ config.log
 config.status
 configure
 libtool
-src/config/bitcoin-config.h
-src/config/bitcoin-config.h.in
+src/config/dash-config.h
+src/config/dash-config.h.in
 src/config/stamp-h1
 share/setup.nsi
 share/qt/Info.plist
@@ -110,4 +115,6 @@ qa/pull-tester/test.*/*
 
 !src/leveldb*/Makefile
 
+.cproject
+.project
 /doc/doxygen/

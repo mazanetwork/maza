@@ -23,7 +23,7 @@ struct CDNSSeedData {
 
 /**
  * CChainParams defines various tweakable parameters of a given instance of the
- * Bitcoin system. There are three: the main network on which people trade goods
+ * Dash system. There are three: the main network on which people trade goods
  * and services, the public test network which gets reset from time to time and
  * a regression test mode which is intended for private networks only. It has
  * minimal difficulty to ensure that blocks can be found instantly.
@@ -34,9 +34,10 @@ public:
     enum Base58Type {
         PUBKEY_ADDRESS,
         SCRIPT_ADDRESS,
-        SECRET_KEY,
-        EXT_PUBLIC_KEY,
-        EXT_SECRET_KEY,
+        SECRET_KEY,     // BIP16
+        EXT_PUBLIC_KEY, // BIP32
+        EXT_SECRET_KEY, // BIP32
+        EXT_COIN_TYPE,  // BIP44
 
         MAX_BASE58_TYPES
     };
@@ -80,6 +81,12 @@ public:
     const std::vector<unsigned char>& Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
     const std::vector<CAddress>& FixedSeeds() const { return vFixedSeeds; }
     virtual const Checkpoints::CCheckpointData& Checkpoints() const = 0;
+    int PoolMaxTransactions() const { return nPoolMaxTransactions; }
+    std::string SporkKey() const { return strSporkKey; }
+    std::string DarksendPoolDummyAddress() const { return strDarksendPoolDummyAddress; }
+    std::string MasternodePaymentPubKey() const { return strMasternodePaymentsPubKey; }
+    int64_t StartMasternodePayments() const { return nStartMasternodePayments; }
+    CBaseChainParams::Network NetworkID() const { return networkID; }
 protected:
     CChainParams() {}
 
@@ -111,6 +118,11 @@ protected:
     bool fMineBlocksOnDemand;
     bool fSkipProofOfWorkCheck;
     bool fTestnetToBeDeprecatedFieldRPC;
+    int nPoolMaxTransactions;
+    std::string strSporkKey;
+    std::string strMasternodePaymentsPubKey;
+    std::string strDarksendPoolDummyAddress;
+    int64_t nStartMasternodePayments;
 };
 
 /** 

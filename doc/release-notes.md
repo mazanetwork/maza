@@ -1,86 +1,34 @@
-Bitcoin Core version 0.10.2 is now available from:
+Dash Core 0.12
+==================
 
-  <https://bitcoin.org/bin/bitcoin-core-0.10.2/>
+Dash Core tree 0.12.x release notes can be found here:
+- [v0.12.0](release-notes/dash/release-notes-0.12.0.md)
 
-This is a new minor version release, bringing minor bug fixes and translation 
-updates. It is recommended to upgrade to this version.
+Dash Core tree 0.12.x is a fork of Bitcoin Core tree 0.10.2
 
-Please report bugs using the issue tracker at github:
 
-  <https://github.com/bitcoin/bitcoin/issues>
 
-Upgrading and downgrading
-=========================
-
-How to Upgrade
+Older releases
 --------------
 
-If you are running an older version, shut it down. Wait until it has completely
-shut down (which might take a few minutes for older versions), then run the
-installer (on Windows) or just copy over /Applications/Bitcoin-Qt (on Mac) or
-bitcoind/bitcoin-qt (on Linux).
+Dash was previously known as Darkcoin.
 
-Downgrade warning
-------------------
+Darkcoin tree 0.8.x was a fork of Litecoin tree 0.8, original name was XCoin
+which was first released on Jan/18/2014.
 
-Because release 0.10.0 and later makes use of headers-first synchronization and
-parallel block download (see further), the block files and databases are not
-backwards-compatible with pre-0.10 versions of Bitcoin Core or other software:
+Darkcoin tree 0.9.x was the open source implementation of masternodes based on
+the 0.8.x tree and was first released on Mar/13/2014.
 
-* Blocks will be stored on disk out of order (in the order they are
-received, really), which makes it incompatible with some tools or
-other programs. Reindexing using earlier versions will also not work
-anymore as a result of this.
+Darkcoin tree 0.10.x used to be the closed source implementation of Darksend
+which was released open source on Sep/25/2014.
 
-* The block index database will now hold headers for which no block is
-stored on disk, which earlier versions won't support.
+Dash Core tree 0.11.x was a fork of Bitcoin Core tree 0.9, Darkcoin was rebranded
+to Dash.
 
-If you want to be able to downgrade smoothly, make a backup of your entire data
-directory. Without this your node will need start syncing (or importing from
-bootstrap.dat) anew afterwards. It is possible that the data from a completely
-synchronised 0.10 node may be usable in older versions as-is, but this is not
-supported and may break as soon as the older version attempts to reindex.
+These release are considered obsolete. Old changelogs can be found here:
 
-This does not affect wallet forward or backward compatibility.
-
-Notable changes
-===============
-
-This fixes a serious problem on Windows with data directories that have non-ASCII
-characters (https://github.com/bitcoin/bitcoin/issues/6078).
-
-For other platforms there are no notable changes.
-
-For the notable changes in 0.10, refer to the release notes
-at https://github.com/bitcoin/bitcoin/blob/v0.10.0/doc/release-notes.md
-
-0.10.2 Change log
-=================
-
-Detailed release notes follow. This overview includes changes that affect external
-behavior, not code moves, refactors or string updates.
-
-Wallet:
-- `824c011` fix boost::get usage with boost 1.58
-
-Miscellaneous:
-- `da65606` Avoid crash on start in TestBlockValidity with gen=1.
-- `424ae66` don't imbue boost::filesystem::path with locale "C" on windows (fixes #6078)
-
-Credits
-=======
-
-Thanks to everyone who directly contributed to this release:
-
-- Cory Fields
-- Gregory Maxwell
-- Jonas Schnelli
-- Wladimir J. van der Laan
-
-And all those who contributed additional code review and/or security research:
-
-- dexX7
-- Pieter Wuille
-- vayvanne
-
-As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
+- [v0.11.2](release-notes/dash/release-notes-0.11.2.md) released Mar/25/2015
+- [v0.11.1](release-notes/dash/release-notes-0.11.1.md) released Feb/10/2015
+- [v0.11.0](release-notes/dash/release-notes-0.11.0.md) released Jan/15/2015
+- [v0.10.x](release-notes/dash/release-notes-0.10.0.md) released Sep/25/2014
+- [v0.9.x](release-notes/dash/release-notes-0.9.0.md) released Mar/13/2014

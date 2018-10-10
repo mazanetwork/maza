@@ -44,7 +44,7 @@ void URITests::uriTests()
     QVERIFY(GUIUtil::parseBitcoinURI(uri, &rv));
     QVERIFY(rv.address == QString("MLgiAgLZp7C4eJEscF6mUUJ33W8aFa94wr"));
     QVERIFY(rv.amount == 10000000000LL);
-    QVERIFY(rv.label == QString("Wikipedia Example"));
+    QVERIFY(rv.label == QString("Some Example"));
 
     uri.setUrl(QString("maza:MLgiAgLZp7C4eJEscF6mUUJ33W8aFa94wr?message=Wikipedia Example Address"));
     QVERIFY(GUIUtil::parseBitcoinURI(uri, &rv));
