@@ -13,8 +13,18 @@
 
 #include <math.h>
 
+static const int64_t nTargetTimespan = 8 * 60; // 8 minutes
+static const int64_t nTargetSpacing = 2 * 60; // 2 minutes
+static const int64_t nInterval = nTargetTimespan / nTargetSpacing; // 4 blocks
+static const int64_t nAveragingInterval = nInterval * 20;
+static const int64_t nAveragingTargetTimespan = nAveragingInterval * 120; 
+static const int64_t nMaxAdjustDown = 20; // 20% adjustment down
+static const int64_t nMaxAdjustUp = 15; // 15% adjustment up
+static const int64_t nMinActualTimespan = nAveragingTargetTimespan * (100 - nMaxAdjustUp) / 100;
+static const int64_t nMaxActualTimespan = nAveragingTargetTimespan * (100 + nMaxAdjustDown) / 100;
+	
 unsigned int static DarkGravityWave(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params) {
-    /* current difficulty formula, dash - DarkGravity v3, written by Evan Duffield - evan@dash.org */
+    /* current difficulty formula, maza - DarkGravity v3, written by Evan Duffield - evan@mazacoin.org */
     const arith_uint256 bnPowLimit = UintToArith256(params.powLimit);
     int64_t nPastBlocks = 24;
 
@@ -23,7 +33,7 @@ unsigned int static DarkGravityWave(const CBlockIndex* pindexLast, const CBlockH
         return bnPowLimit.GetCompact();
     }
 
-    if (params.fPowAllowMinDifficultyBlocks && (
+   /* if (params.fPowAllowMinDifficultyBlocks && (
         // testnet ...
         (params.hashDevnetGenesisBlock.IsNull() && pindexLast->nChainWork >= UintToArith256(uint256S("0x000000000000000000000000000000000000000000000000003e9ccfe0e03e01"))) ||
         // or devnet
@@ -62,7 +72,7 @@ unsigned int static DarkGravityWave(const CBlockIndex* pindexLast, const CBlockH
             }
         }
     }
-
+*/
     const CBlockIndex *pindex = pindexLast;
     arith_uint256 bnPastTargetAvg;
 
@@ -108,21 +118,19 @@ unsigned int GetNextWorkRequiredBTC(const CBlockIndex* pindexLast, const CBlockH
 
 
     unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
-
+	unsigned int nStartingDifficulty = UintToArith256(params.startingDifficulty).GetCompact();
     // Genesis block
     if (pindexLast == NULL)
         return nProofOfWorkLimit;
-
-    // Start at difficulty of 1
-    if (pindexLast->nHeight+1 < nAveragingInterval)
-        return Params().StartingDifficulty().GetCompact();
+	if (pindexLast->nHeight+1 < nAveragingInterval)
+        return nStartingDifficulty;
     // Only change once per interval
-    if ((pindexLast->nHeight+1) % params.DifficultyAdjustmentInterval() != 0)
+    if ((pindexLast->nHeight+1) % nInterval != 0)
     {
         if (params.fPowAllowMinDifficultyBlocks)
         {
             // Special difficulty rule for testnet:
-            // If the new block's timestamp is more than 2* 2.5 minutes
+            // If the new block's timestamp is more than 2* 2 minutes
             // then allow mining of a min-difficulty block.
             if (pblock->GetBlockTime() > pindexLast->GetBlockTime() + params.nPowTargetSpacing*2)
                 return nProofOfWorkLimit;
@@ -130,7 +138,7 @@ unsigned int GetNextWorkRequiredBTC(const CBlockIndex* pindexLast, const CBlockH
             {
                 // Return the last non-special-min-difficulty-rules-block
                 const CBlockIndex* pindex = pindexLast;
-                while (pindex->pprev && pindex->nHeight % params.DifficultyAdjustmentInterval() != 0 && pindex->nBits == nProofOfWorkLimit)
+                while (pindex->pprev && pindex->nHeight % nInterval != 0 && pindex->nBits == nProofOfWorkLimit)
                     pindex = pindex->pprev;
                 return pindex->nBits;
             }
@@ -138,10 +146,10 @@ unsigned int GetNextWorkRequiredBTC(const CBlockIndex* pindexLast, const CBlockH
         return pindexLast->nBits;
     }
 
-    // Go back by what we want to be 1 day worth of blocks
-    int nHeightFirst = pindexLast->nHeight - (params.DifficultyAdjustmentInterval()-1);
-    assert(nHeightFirst >= 0);
-    const CBlockIndex* pindexFirst = pindexLast->GetAncestor(nHeightFirst);
+    // Go back by what we want to be nAveragingInterval blocks
+    const CBlockIndex* pindexFirst = pindexLast;
+    for (int i = 0; pindexFirst && i < nAveragingInterval-1; i++)
+        pindexFirst = pindexFirst->pprev;
     assert(pindexFirst);
 
    return CalculateNextWorkRequired(pindexLast, pindexFirst->GetBlockTime(), params);
@@ -153,31 +161,33 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     if (pindexLast->nHeight + 1 >= params.nPowDGWHeight) {
         return DarkGravityWave(pindexLast, pblock, params);
     }
-    else if (pindexLast->nHeight + 1 >= params.nPowKGWHeight) {
+
     else {
         return GetNextWorkRequiredBTC(pindexLast, pblock, params);
     }
 }
 
+
 // for DIFF_BTC only!
 unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params& params)
 {
+	
     if (params.fPowNoRetargeting)
         return pindexLast->nBits;
 
     // Limit adjustment step
     int64_t nActualTimespan = pindexLast->GetBlockTime() - nFirstBlockTime;
-    if (nActualTimespan < params.nPowTargetTimespan/4)
-        nActualTimespan = params.nPowTargetTimespan/4;
-    if (nActualTimespan > params.nPowTargetTimespan*4)
-        nActualTimespan = params.nPowTargetTimespan*4;
+    if (nActualTimespan < nMinActualTimespan)
+        nActualTimespan = nMinActualTimespan;
+    if (nActualTimespan > nMaxActualTimespan)
+        nActualTimespan = nMaxActualTimespan;
 
     // Retarget
     const arith_uint256 bnPowLimit = UintToArith256(params.powLimit);
     arith_uint256 bnNew;
     bnNew.SetCompact(pindexLast->nBits);
     bnNew *= nActualTimespan;
-    bnNew /= params.nPowTargetTimespan;
+    bnNew /= nAveragingTargetTimespan;
 
     if (bnNew > bnPowLimit)
         bnNew = bnPowLimit;

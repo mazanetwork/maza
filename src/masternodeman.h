@@ -1,4 +1,6 @@
-// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2014-2017 The Dash Core developers 
+// Copyright (c) 2014-2018 The Maza Core developers 
+
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -244,11 +246,7 @@ public:
      */
     void NotifyMasternodeUpdates(CConnman& connman);
 
-    /// Update masternode list and maps using provided CMasternodeBroadcast
-    void UpdateMasternodeList(CMasternodeBroadcast mnb);
-    /// Perform complete check and only then update list and maps
-    bool CheckMnbAndUpdateMasternodeList(CMasternodeBroadcast mnb, int& nDos);
-
 };
 
 #endif
+  

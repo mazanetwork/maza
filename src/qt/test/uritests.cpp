@@ -64,7 +64,7 @@ void URITests::uriTests()
     uri.setUrl(QString("maza:MLgiAgLZp7C4eJEscF6mUUJ33W8aFa94wr?amount=1,000.0&label=Wikipedia Example"));
     QVERIFY(!GUIUtil::parseBitcoinURI(uri, &rv));
 
-    uri.setUrl(QString("dash:XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg?amount=100&label=Some Example&message=Some Example Message&IS=1"));
+    uri.setUrl(QString("maza:XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg?amount=100&label=Some Example&message=Some Example Message&IS=1"));
     QVERIFY(GUIUtil::parseBitcoinURI(uri, &rv));
     QVERIFY(rv.address == QString("XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg"));
     QVERIFY(rv.amount == 10000000000LL);
@@ -72,7 +72,7 @@ void URITests::uriTests()
     QVERIFY(rv.message == QString("Some Example Message"));
     QVERIFY(rv.fUseInstantSend == 1);
 
-    uri.setUrl(QString("dash:XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg?amount=100&label=Some Example&message=Some Example Message&IS=Something Invalid"));
+    uri.setUrl(QString("maza:XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg?amount=100&label=Some Example&message=Some Example Message&IS=Something Invalid"));
     QVERIFY(GUIUtil::parseBitcoinURI(uri, &rv));
     QVERIFY(rv.address == QString("XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg"));
     QVERIFY(rv.amount == 10000000000LL);
@@ -80,15 +80,15 @@ void URITests::uriTests()
     QVERIFY(rv.message == QString("Some Example Message"));
     QVERIFY(rv.fUseInstantSend != 1);
 
-    uri.setUrl(QString("dash:XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg?IS=1"));
+    uri.setUrl(QString("maza:XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg?IS=1"));
     QVERIFY(GUIUtil::parseBitcoinURI(uri, &rv));
     QVERIFY(rv.fUseInstantSend == 1);
 
-    uri.setUrl(QString("dash:XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg?IS=0"));
+    uri.setUrl(QString("maza:XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg?IS=0"));
     QVERIFY(GUIUtil::parseBitcoinURI(uri, &rv));
     QVERIFY(rv.fUseInstantSend != 1);
 
-    uri.setUrl(QString("dash:XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg"));
+    uri.setUrl(QString("maza:XwnLY9Tf7Zsef8gMGL2fhWA9ZmMjt4KPwg"));
     QVERIFY(GUIUtil::parseBitcoinURI(uri, &rv));
     QVERIFY(rv.fUseInstantSend != 1);
 }

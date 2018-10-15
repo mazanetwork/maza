@@ -13,7 +13,7 @@
     "args": ["-"],
     "input": "blanktxv2.hex",
     "output_cmp": "blanktxv2.hex",
-    "description": "Creates a blank transaction when nothing is piped into dash-tx"
+    "description": "Creates a blank transaction when nothing is piped into maza-tx"
   },
   { "exec": "./maza-tx",
     "args": ["-json","-create"],
@@ -24,7 +24,7 @@
     "args": ["-json","-"],
     "input": "blanktxv2.hex",
     "output_cmp": "blanktxv2.json",
-    "description": "Creates a blank transaction when nothing is piped into dash-tx (output in json)"
+    "description": "Creates a blank transaction when nothing is piped into maza-tx (output in json)"
   },
   { "exec": "./maza-tx",
     "args": ["-", "delin=1"],
@@ -281,7 +281,7 @@
     "output_cmp": "txcreatedata_seq0.hex",
     "description": "Creates a new transaction with one input with sequence number and one address output"
   },
-  { "exec": "./dash-tx",
+  { "exec": "./maza-tx",
     "args":
     ["-json",
      "-create",
@@ -290,14 +290,14 @@
     "output_cmp": "txcreatedata_seq0.json",
     "description": "Creates a new transaction with one input with sequence number and one address output (output in json)"
   },
-  { "exec": "./dash-tx",
+  { "exec": "./maza-tx",
     "args":
     ["01000000011f5c38dfcf6f1a5f5a87c416076d392c87e6d41970d5ad5e477a02d66bde97580000000000fdffffff0180a81201000000001976a9141fc11f39be1729bf973a7ab6a615ca4729d6457488ac00000000",
      "in=5897de6bd6027a475eadd57019d4e6872c396d0716c4875a5f1a6fcfdf385c1f:0:1"],
     "output_cmp": "txcreatedata_seq1.hex",
     "description": "Adds a new input with sequence number to a transaction"
   },
-  { "exec": "./dash-tx",
+  { "exec": "./maza-tx",
     "args":
     ["-json",
      "01000000011f5c38dfcf6f1a5f5a87c416076d392c87e6d41970d5ad5e477a02d66bde97580000000000fdffffff0180a81201000000001976a9141fc11f39be1729bf973a7ab6a615ca4729d6457488ac00000000",
@@ -305,22 +305,22 @@
     "output_cmp": "txcreatedata_seq1.json",
     "description": "Adds a new input with sequence number to a transaction (output in json)"
   },
-  { "exec": "./dash-tx",
+  { "exec": "./maza-tx",
     "args": ["-create", "outmultisig=1:2:3:02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397:021ac43c7ff740014c3b33737ede99c967e4764553d1b2b83db77c83b8715fa72d:02df2089105c77f266fa11a9d33f05c735234075f2e8780824c6b709415f9fb485", "nversion=1"],
     "output_cmp": "txcreatemultisig1.hex",
     "description": "Creates a new transaction with a single 2-of-3 multisig output"
   },
-  { "exec": "./dash-tx",
+  { "exec": "./maza-tx",
     "args": ["-json", "-create", "outmultisig=1:2:3:02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397:021ac43c7ff740014c3b33737ede99c967e4764553d1b2b83db77c83b8715fa72d:02df2089105c77f266fa11a9d33f05c735234075f2e8780824c6b709415f9fb485", "nversion=1"],
     "output_cmp": "txcreatemultisig1.json",
     "description": "Creates a new transaction with a single 2-of-3 multisig output (output in json)"
   },
-  { "exec": "./dash-tx",
+  { "exec": "./maza-tx",
     "args": ["-create", "outmultisig=1:2:3:02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397:021ac43c7ff740014c3b33737ede99c967e4764553d1b2b83db77c83b8715fa72d:02df2089105c77f266fa11a9d33f05c735234075f2e8780824c6b709415f9fb485:S", "nversion=1"],
     "output_cmp": "txcreatemultisig2.hex",
     "description": "Creates a new transaction with a single 2-of-3 multisig in a P2SH output"
   },
-  { "exec": "./dash-tx",
+  { "exec": "./maza-tx",
     "args": ["-json", "-create", "outmultisig=1:2:3:02a5613bd857b7048924264d1e70e08fb2a7e6527d32b7ab1bb993ac59964ff397:021ac43c7ff740014c3b33737ede99c967e4764553d1b2b83db77c83b8715fa72d:02df2089105c77f266fa11a9d33f05c735234075f2e8780824c6b709415f9fb485:S", "nversion=1"],
     "output_cmp": "txcreatemultisig2.json",
     "description": "Creates a new transaction with a single 2-of-3 multisig in a P2SH output (output in json)"

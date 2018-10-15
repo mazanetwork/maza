@@ -1,11 +1,13 @@
-// Copyright (c) 2014-2018 The Dash Core developers
+// Copyright (c) 2014-2017 The Dash Core developers 
+// Copyright (c) 2014-2018 The Maza Core developers 
+
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "chainparams.h"
 #include "validation.h"
 
-#include "test/test_dash.h"
+#include "test/test_maza.h"
 
 #include <boost/test/unit_test.hpp>
 

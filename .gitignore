@@ -34,8 +34,8 @@ config.log
 config.status
 configure
 libtool
-src/config/dash-config.h
-src/config/dash-config.h.in
+src/config/maza-config.h
+src/config/maza-config.h.in
 src/config/stamp-h1
 share/setup.nsi
 share/qt/Info.plist
@@ -117,15 +117,15 @@ qa/cache/*
 .autotools
 /doc/doxygen/
 
-libdashconsensus.pc
+libmazaconsensus.pc
 contrib/devtools/split-debug.sh
-src/qt/dash-qt.bash
+src/qt/maza-qt.bash
 qa/pull-tester/tests-config.sh
 
 #development symlinks
-dash-cli
-dashd
-dash-qt
+maza-cli
+mazad
+maza-qt
 make
 
 /docker/bin

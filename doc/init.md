@@ -14,7 +14,7 @@ can be found in the contrib/init folder.
 
 All three startup configurations assume the existence of a "maza" user
 and group.  They must be created before attempting to use these scripts.
-The OS X configuration assumes dashd will be set up for the current user.
+The OS X configuration assumes mazad will be set up for the current user.
 
 2. Configuration
 ---------------------------------
@@ -42,7 +42,7 @@ For an example configuration file that describes the configuration settings,
 see contrib/debian/examples/maza.conf.
 
 For an example configuration file that describes the configuration settings,
-see `contrib/debian/examples/dash.conf`.
+see `contrib/debian/examples/maza.conf`.
 
 3. Paths
 ---------------------------------
@@ -65,10 +65,10 @@ can then be controlled by group membership.
 
 3b) Mac OS X
 
-Binary:              `/usr/local/bin/dashd`  
-Configuration file:  `~/Library/Application Support/DashCore/dash.conf`  
-Data directory:      `~/Library/Application Support/DashCore`
-Lock file:           `~/Library/Application Support/DashCore/.lock`
+Binary:              `/usr/local/bin/mazad`  
+Configuration file:  `~/Library/Application Support/MazaCore/maza.conf`  
+Data directory:      `~/Library/Application Support/MazaCore`
+Lock file:           `~/Library/Application Support/MazaCore/.lock`
 
 4. Installing Service Configuration
 -----------------------------------
@@ -99,22 +99,22 @@ use old versions of Upstart and do not supply the start-stop-daemon utility.
 
 4d) CentOS
 
-Copy dashd.init to /etc/init.d/dashd. Test by running `service dashd start`.
+Copy mazad.init to /etc/init.d/mazad. Test by running `service mazad start`.
 
-Using this script, you can adjust the path and flags to the dashd program by
-setting the DASHD and FLAGS environment variables in the file
-/etc/sysconfig/dashd. You can also use the DAEMONOPTS environment variable here.
+Using this script, you can adjust the path and flags to the mazad program by
+setting the MAZAD and FLAGS environment variables in the file
+/etc/sysconfig/mazad. You can also use the DAEMONOPTS environment variable here.
 
 4e) Mac OS X
 
-Copy org.dash.dashd.plist into ~/Library/LaunchAgents. Load the launch agent by
-running `launchctl load ~/Library/LaunchAgents/org.dash.dashd.plist`.
+Copy org.maza.mazad.plist into ~/Library/LaunchAgents. Load the launch agent by
+running `launchctl load ~/Library/LaunchAgents/org.maza.mazad.plist`.
 
-This Launch Agent will cause dashd to start whenever the user logs in.
+This Launch Agent will cause mazad to start whenever the user logs in.
 
-NOTE: This approach is intended for those wanting to run dashd as the current user.
-You will need to modify org.dash.dashd.plist if you intend to use it as a
-Launch Daemon with a dedicated dashcore user.
+NOTE: This approach is intended for those wanting to run mazad as the current user.
+You will need to modify org.maza.mazad.plist if you intend to use it as a
+Launch Daemon with a dedicated mazacore user.
 
 5. Auto-respawn
 -----------------------------------

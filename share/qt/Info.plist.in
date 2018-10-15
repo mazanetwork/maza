@@ -57,7 +57,7 @@
       <key>UTTypeIdentifier</key>
       <string>org.maza.paymentrequest</string>
       <key>UTTypeDescription</key>
-      <string>Dash payment request</string>
+      <string>Maza payment request</string>
       <key>UTTypeConformsTo</key>
       <array>
         <string>public.data</string>
