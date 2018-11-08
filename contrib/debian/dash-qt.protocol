@@ -1,0 +1,11 @@
+[Protocol]
+exec=maza-qt '%u'
+protocol=maza
+input=none
+output=none
+helper=true
+listing=
+reading=false
+writing=false
+makedir=false
+deleting=false

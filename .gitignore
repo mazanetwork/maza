@@ -1,3 +1,8 @@
+*.sublime-project
+*.sublime-workspace
+todo.txt
+reset-files.bash
+
 *.tar.gz
 
 *.exe
@@ -29,8 +34,8 @@ config.log
 config.status
 configure
 libtool
-src/config/bitcoin-config.h
-src/config/bitcoin-config.h.in
+src/config/maza-config.h
+src/config/maza-config.h.in
 src/config/stamp-h1
 share/setup.nsi
 share/qt/Info.plist
@@ -42,6 +47,7 @@ src/qt/moc_*.cpp
 src/qt/forms/ui_*.h
 
 src/qt/test/moc*.cpp
+libconftest.dylib*
 
 .deps
 .dirstamp
@@ -85,15 +91,13 @@ src/test/buildenv.py
 # Resources cpp
 qrc_*.cpp
 
-# Qt creator
-*.pro.user
-
 # Mac specific
 .DS_Store
 build
 
 #lcov
 *.gcno
+*.gcda
 /*.info
 test_maza.coverage/
 total.coverage/
@@ -103,11 +107,29 @@ coverage_percent.txt
 linux-coverage-build
 linux-build
 win32-build
-qa/pull-tester/run-mazad-for-test.sh
-qa/pull-tester/tests-config.sh
-qa/pull-tester/cache/*
-qa/pull-tester/test.*/*
+qa/pull-tester/tests_config.py
+qa/cache/*
 
 !src/leveldb*/Makefile
 
+.cproject
+.project
+.autotools
 /doc/doxygen/
+
+libmazaconsensus.pc
+contrib/devtools/split-debug.sh
+src/qt/maza-qt.bash
+qa/pull-tester/tests-config.sh
+
+#development symlinks
+maza-cli
+mazad
+maza-qt
+make
+
+/docker/bin
+
+# CLion
+.idea
+cmake-build-debug

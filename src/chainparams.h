@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin developers
+// Copyright (c) 2009-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -7,23 +7,38 @@
 #define BITCOIN_CHAINPARAMS_H
 
 #include "chainparamsbase.h"
-#include "checkpoints.h"
+#include "consensus/params.h"
 #include "primitives/block.h"
 #include "protocol.h"
-#include "uint256.h"
 
 #include <vector>
 
-typedef unsigned char MessageStartChars[MESSAGE_START_SIZE];
-
 struct CDNSSeedData {
     std::string name, host;
-    CDNSSeedData(const std::string &strName, const std::string &strHost) : name(strName), host(strHost) {}
+    bool supportsServiceBitsFiltering;
+    CDNSSeedData(const std::string &strName, const std::string &strHost, bool supportsServiceBitsFilteringIn = false) : name(strName), host(strHost), supportsServiceBitsFiltering(supportsServiceBitsFilteringIn) {}
+};
+
+struct SeedSpec6 {
+    uint8_t addr[16];
+    uint16_t port;
+};
+
+typedef std::map<int, uint256> MapCheckpoints;
+
+struct CCheckpointData {
+    MapCheckpoints mapCheckpoints;
+};
+
+struct ChainTxData {
+    int64_t nTime;
+    int64_t nTxCount;
+    double dTxRate;
 };
 
 /**
  * CChainParams defines various tweakable parameters of a given instance of the
- * Bitcoin system. There are three: the main network on which people trade goods
+ * Maza system. There are three: the main network on which people trade goods
  * and services, the public test network which gets reset from time to time and
  * a regression test mode which is intended for private networks only. It has
  * minimal difficulty to ensure that blocks can be found instantly.
@@ -34,123 +49,93 @@ public:
     enum Base58Type {
         PUBKEY_ADDRESS,
         SCRIPT_ADDRESS,
-        SECRET_KEY,
-        EXT_PUBLIC_KEY,
-        EXT_SECRET_KEY,
+        SECRET_KEY,     // BIP16
+        EXT_PUBLIC_KEY, // BIP32
+        EXT_SECRET_KEY, // BIP32
 
         MAX_BASE58_TYPES
     };
 
-    const uint256& HashGenesisBlock() const { return hashGenesisBlock; }
-    const MessageStartChars& MessageStart() const { return pchMessageStart; }
+    const Consensus::Params& GetConsensus() const { return consensus; }
+    const CMessageHeader::MessageStartChars& MessageStart() const { return pchMessageStart; }
     const std::vector<unsigned char>& AlertKey() const { return vAlertPubKey; }
     int GetDefaultPort() const { return nDefaultPort; }
-    const uint256& ProofOfWorkLimit() const { return bnProofOfWorkLimit; }
-    const uint256& StartingDifficulty() const { return bnStartingDifficulty; }
-    int SubsidyHalvingInterval() const { return nSubsidyHalvingInterval; }
-    /** Used to check majorities for block version upgrade */
-    int EnforceBlockUpgradeMajority() const { return nEnforceBlockUpgradeMajority; }
-    int RejectBlockOutdatedMajority() const { return nRejectBlockOutdatedMajority; }
-    int ToCheckBlockUpgradeMajority() const { return nToCheckBlockUpgradeMajority; }
 
-    /** Used if GenerateBitcoins is called with a negative number of threads */
-    int DefaultMinerThreads() const { return nMinerThreads; }
     const CBlock& GenesisBlock() const { return genesis; }
-    bool RequireRPCPassword() const { return fRequireRPCPassword; }
+    const CBlock& DevNetGenesisBlock() const { return devnetGenesis; }
     /** Make miner wait to have peers to avoid wasting work */
     bool MiningRequiresPeers() const { return fMiningRequiresPeers; }
     /** Default value for -checkmempool and -checkblockindex argument */
     bool DefaultConsistencyChecks() const { return fDefaultConsistencyChecks; }
-    /** Allow mining of a min-difficulty block */
-    bool AllowMinDifficultyBlocks() const { return fAllowMinDifficultyBlocks; }
-    /** Skip proof-of-work check: allow mining of any difficulty block */
-    bool SkipProofOfWorkCheck() const { return fSkipProofOfWorkCheck; }
-    /** Make standard checks */
+    /** Policy: Filter transactions that do not match well-defined patterns */
     bool RequireStandard() const { return fRequireStandard; }
-    int64_t TargetTimespan() const { return nTargetTimespan; }
-    int64_t TargetSpacing() const { return nTargetSpacing; }
-    int64_t Interval() const { return nTargetTimespan / nTargetSpacing; }
+    uint64_t PruneAfterHeight() const { return nPruneAfterHeight; }
     /** Make miner stop after a block is found. In RPC, don't return until nGenProcLimit blocks are generated */
     bool MineBlocksOnDemand() const { return fMineBlocksOnDemand; }
-    /** In the future use NetworkIDString() for RPC fields */
-    bool TestnetToBeDeprecatedFieldRPC() const { return fTestnetToBeDeprecatedFieldRPC; }
+    /** Allow multiple addresses to be selected from the same network group (e.g. 192.168.x.x) */
+    bool AllowMultipleAddressesFromGroup() const { return fAllowMultipleAddressesFromGroup; }
+    /** Allow nodes with the same address and multiple ports */
+    bool AllowMultiplePorts() const { return fAllowMultiplePorts; }
     /** Return the BIP70 network string (main, test or regtest) */
     std::string NetworkIDString() const { return strNetworkID; }
     const std::vector<CDNSSeedData>& DNSSeeds() const { return vSeeds; }
     const std::vector<unsigned char>& Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
-    const std::vector<CAddress>& FixedSeeds() const { return vFixedSeeds; }
-    virtual const Checkpoints::CCheckpointData& Checkpoints() const = 0;
+    int ExtCoinType() const { return nExtCoinType; }
+    const std::vector<SeedSpec6>& FixedSeeds() const { return vFixedSeeds; }
+    const CCheckpointData& Checkpoints() const { return checkpointData; }
+    const ChainTxData& TxData() const { return chainTxData; }
+    int PoolMaxTransactions() const { return nPoolMaxTransactions; }
+    int FulfilledRequestExpireTime() const { return nFulfilledRequestExpireTime; }
+    const std::string& SporkAddress() const { return strSporkAddress; }
 protected:
     CChainParams() {}
 
-    uint256 hashGenesisBlock;
-    MessageStartChars pchMessageStart;
+    Consensus::Params consensus;
+    CMessageHeader::MessageStartChars pchMessageStart;
     //! Raw pub key bytes for the broadcast alert signing key.
     std::vector<unsigned char> vAlertPubKey;
     int nDefaultPort;
-    uint256 bnProofOfWorkLimit;
-    uint256 bnStartingDifficulty;
-    int nSubsidyHalvingInterval;
-    int nEnforceBlockUpgradeMajority;
-    int nRejectBlockOutdatedMajority;
-    int nToCheckBlockUpgradeMajority;
-    int64_t nTargetTimespan;
-    int64_t nTargetSpacing;
-    int nMinerThreads;
+    uint64_t nPruneAfterHeight;
     std::vector<CDNSSeedData> vSeeds;
     std::vector<unsigned char> base58Prefixes[MAX_BASE58_TYPES];
-    CBaseChainParams::Network networkID;
+    int nExtCoinType;
     std::string strNetworkID;
     CBlock genesis;
-    std::vector<CAddress> vFixedSeeds;
-    bool fRequireRPCPassword;
+    CBlock devnetGenesis;
+    std::vector<SeedSpec6> vFixedSeeds;
     bool fMiningRequiresPeers;
-    bool fAllowMinDifficultyBlocks;
     bool fDefaultConsistencyChecks;
     bool fRequireStandard;
     bool fMineBlocksOnDemand;
-    bool fSkipProofOfWorkCheck;
-    bool fTestnetToBeDeprecatedFieldRPC;
+    bool fAllowMultipleAddressesFromGroup;
+    bool fAllowMultiplePorts;
+    CCheckpointData checkpointData;
+    ChainTxData chainTxData;
+    int nPoolMaxTransactions;
+    int nFulfilledRequestExpireTime;
+    std::string strSporkAddress;
 };
-
-/** 
- * Modifiable parameters interface is used by test cases to adapt the parameters in order
- * to test specific features more easily. Test cases should always restore the previous
- * values after finalization.
- */
-
-class CModifiableParams {
-public:
-    //! Published setters to allow changing values in unit test cases
-    virtual void setSubsidyHalvingInterval(int anSubsidyHalvingInterval) =0;
-    virtual void setEnforceBlockUpgradeMajority(int anEnforceBlockUpgradeMajority)=0;
-    virtual void setRejectBlockOutdatedMajority(int anRejectBlockOutdatedMajority)=0;
-    virtual void setToCheckBlockUpgradeMajority(int anToCheckBlockUpgradeMajority)=0;
-    virtual void setDefaultConsistencyChecks(bool aDefaultConsistencyChecks)=0;
-    virtual void setAllowMinDifficultyBlocks(bool aAllowMinDifficultyBlocks)=0;
-    virtual void setSkipProofOfWorkCheck(bool aSkipProofOfWorkCheck)=0;
-};
-
 
 /**
- * Return the currently selected parameters. This won't change after app startup
- * outside of the unit tests.
+ * Return the currently selected parameters. This won't change after app
+ * startup, except for unit tests.
  */
 const CChainParams &Params();
 
-/** Return parameters for the given network. */
-CChainParams &Params(CBaseChainParams::Network network);
-
-/** Get modifiable network parameters (UNITTEST only) */
-CModifiableParams *ModifiableParams();
-
-/** Sets the params returned by Params() to those for the given network. */
-void SelectParams(CBaseChainParams::Network network);
+/**
+ * @returns CChainParams for the given BIP70 chain name.
+ */
+CChainParams& Params(const std::string& chain);
 
 /**
- * Looks for -regtest or -testnet and then calls SelectParams as appropriate.
- * Returns false if an invalid combination is given.
+ * Sets the params returned by Params() to those for the given BIP70 chain name.
+ * @throws std::runtime_error when the chain is not supported.
  */
-bool SelectParamsFromCommandLine();
+void SelectParams(const std::string& chain);
+
+/**
+ * Allows modifying the BIP9 regtest parameters.
+ */
+void UpdateRegtestBIP9Parameters(Consensus::DeploymentPos d, int64_t nStartTime, int64_t nTimeout);
 
 #endif // BITCOIN_CHAINPARAMS_H
