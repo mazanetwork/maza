@@ -1,7 +1,5 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Dash Core developers 
-// Copyright (c) 2014-2018 The Maza Core developers 
-
+// Copyright (c) 2014-2017 The Maza Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -46,10 +44,14 @@ QString BitcoinUnits::name(int unit)
 {
     if(Params().NetworkIDString() == CBaseChainParams::MAIN)
     {
-    case BTC: return QString("MAZA");
-    case mBTC: return QString("mMAZA");
-    case uBTC: return QString::fromUtf8("μMAZA");
-    default: return QString("???");
+        switch(unit)
+        {
+            case MAZA: return QString("MAZA");
+            case mMAZA: return QString("mMAZA");
+            case uMAZA: return QString::fromUtf8("μMAZA");
+            case duffs: return QString("duffs");
+            default: return QString("???");
+        }
     }
     else
     {
@@ -68,10 +70,14 @@ QString BitcoinUnits::description(int unit)
 {
     if(Params().NetworkIDString() == CBaseChainParams::MAIN)
     {
-    case BTC: return QString("Mazas");
-    case mBTC: return QString("Milli-Mazas (1 / 1" THIN_SP_UTF8 "000)");
-    case uBTC: return QString("Micro-Mazas (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
-    default: return QString("???");
+        switch(unit)
+        {
+            case MAZA: return QString("Maza");
+            case mMAZA: return QString("Milli-Maza (1 / 1" THIN_SP_UTF8 "000)");
+            case uMAZA: return QString("Micro-Maza (1 / 1" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
+            case duffs: return QString("Ten Nano-Maza (1 / 100" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)");
+            default: return QString("???");
+        }
     }
     else
     {

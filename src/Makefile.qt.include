@@ -617,7 +617,7 @@ QT_FORMS_H=$(join $(dir $(QT_FORMS_UI)),$(addprefix ui_, $(notdir $(QT_FORMS_UI:
 # Most files will depend on the forms and moc files as includes. Generate them
 # before anything else.
 $(QT_MOC): $(QT_FORMS_H)
-$(qt_libbitcoinqt_a_OBJECTS) $(qt_maza_qt_OBJECTS) : | $(QT_MOC)
+$(qt_libmazaqt_a_OBJECTS) $(qt_maza_qt_OBJECTS) : | $(QT_MOC)
 
 #Generating these with a half-written protobuf header leads to wacky results.
 #This makes sure it's done.
@@ -629,14 +629,14 @@ qt_maza_qt_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BITCOIN_QT_INCLUDES) 
   $(QT_INCLUDES) $(PROTOBUF_CFLAGS) $(QR_CFLAGS)
 qt_maza_qt_CXXFLAGS = $(AM_CXXFLAGS) $(QT_PIE_FLAGS)
 
-qt_maza_qt_SOURCES = qt/bitcoin.cpp
+qt_maza_qt_SOURCES = qt/maza.cpp
 if TARGET_DARWIN
   qt_maza_qt_SOURCES += $(BITCOIN_MM)
 endif
 if TARGET_WINDOWS
   qt_maza_qt_SOURCES += $(BITCOIN_RC)
 endif
-qt_maza_qt_LDADD = qt/libbitcoinqt.a $(LIBBITCOIN_SERVER)
+qt_maza_qt_LDADD = qt/libmazaqt.a $(LIBBITCOIN_SERVER)
 if ENABLE_WALLET
 qt_maza_qt_LDADD += $(LIBBITCOIN_WALLET)
 endif
@@ -678,7 +678,7 @@ CLEAN_QT = $(nodist_qt_libmazaqt_a_SOURCES) $(QT_QM) $(QT_FORMS_H) qt/*.gcda qt/
 
 CLEANFILES += $(CLEAN_QT)
 
-	rm -f $(CLEAN_QT) $(qt_libbitcoinqt_a_OBJECTS) $(qt_maza_qt_OBJECTS) qt/maza-qt$(EXEEXT) $(LIBBITCOINQT)
+	rm -f $(CLEAN_QT) $(qt_libmazaqt_a_OBJECTS) $(qt_maza_qt_OBJECTS) qt/maza-qt$(EXEEXT) $(LIBBITCOINQT)
 
 maza_qt : qt/maza-qt$(EXEEXT)
 
