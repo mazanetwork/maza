@@ -10,8 +10,6 @@ define(_COPYRIGHT_HOLDERS,[The %s developers])
 define(_COPYRIGHT_HOLDERS_SUBSTITUTION,[[Maza Core]])
 AC_INIT([Maza Core],[_CLIENT_VERSION_MAJOR._CLIENT_VERSION_MINOR._CLIENT_VERSION_REVISION],[https://github.com/mazacoin/maza/issues],[mazacore],[https://mazacoin.org/])
 AC_CONFIG_SRCDIR([src/validation.cpp])
-
-define(_COPYRIGHT_YEAR, 2015)
 AC_CONFIG_HEADERS([src/config/maza-config.h])
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([build-aux/m4])
@@ -1032,7 +1030,9 @@ if test x$bitcoin_enable_qt != xno; then
     AC_MSG_RESULT([no])
   fi
 fi
+
 AM_CONDITIONAL([ENABLE_ZMQ], [test "x$use_zmq" = "xyes"])
+
 AC_MSG_CHECKING([whether to build test_maza])
 if test x$use_tests = xyes; then
   AC_MSG_RESULT([yes])

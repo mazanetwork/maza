@@ -267,7 +267,6 @@ libmaza_server_a_SOURCES = \
   versionbits.cpp \
   $(BITCOIN_CORE_H)
 
-# wallet: shared between mazad and maza-qt, but only linked
 if ENABLE_ZMQ
 libmaza_zmq_a_CPPFLAGS = $(BITCOIN_INCLUDES) $(ZMQ_CFLAGS)
 libmaza_zmq_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
@@ -278,6 +277,7 @@ libmaza_zmq_a_SOURCES = \
 endif
 
 
+# wallet: shared between mazad and maza-qt, but only linked
 # when wallet enabled
 libmaza_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libmaza_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
@@ -446,7 +446,6 @@ if TARGET_WINDOWS
 maza_cli_SOURCES += maza-cli-res.rc
 endif
 
-# maza-cli binary #
 maza_cli_LDADD = \
   $(LIBBITCOIN_CLI) \
   $(LIBUNIVALUE) \
@@ -455,6 +454,7 @@ maza_cli_LDADD = \
 maza_cli_LDADD += $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
 #
 
+# maza-tx binary #
 maza_tx_SOURCES = maza-tx.cpp
 maza_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 maza_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
@@ -464,7 +464,6 @@ if TARGET_WINDOWS
 maza_tx_SOURCES += maza-tx-res.rc
 endif
 
-# maza-tx binary #
 maza_tx_LDADD = \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_COMMON) \
