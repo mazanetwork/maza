@@ -1,5 +1,5 @@
-// Copyright (c) 2011-2013 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_QT_ASKPASSPHRASEDIALOG_H
@@ -22,6 +22,7 @@ class AskPassphraseDialog : public QDialog
 public:
     enum Mode {
         Encrypt,    /**< Ask passphrase twice and encrypt */
+        UnlockMixing,     /**< Ask passphrase and unlock only for mixing */
         Unlock,     /**< Ask passphrase and unlock */
         ChangePass, /**< Ask old passphrase + new passphrase twice */
         Decrypt     /**< Ask passphrase and decrypt wallet */
@@ -40,8 +41,9 @@ private:
     WalletModel *model;
     bool fCapsLock;
 
-private slots:
+private Q_SLOTS:
     void textChanged();
+    void secureClearPassFields();
 
 protected:
     bool event(QEvent *event);

@@ -1,13 +1,16 @@
-Bitcoin Core version 0.10.2 is now available from:
+Maza Core version 0.12.3.3
+==========================
 
-  <https://bitcoin.org/bin/bitcoin-core-0.10.2/>
+Release is now available from:
 
-This is a new minor version release, bringing minor bug fixes and translation 
-updates. It is recommended to upgrade to this version.
+  <https://www.mazacoin.org/downloads/#wallets>
+
+This is a critical bugfix release.
 
 Please report bugs using the issue tracker at github:
 
-  <https://github.com/bitcoin/bitcoin/issues>
+  <https://github.com/mazacoin/maza/issues>
+
 
 Upgrading and downgrading
 =========================
@@ -17,70 +20,80 @@ How to Upgrade
 
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes for older versions), then run the
-installer (on Windows) or just copy over /Applications/Bitcoin-Qt (on Mac) or
-bitcoind/bitcoin-qt (on Linux).
+installer (on Windows) or just copy over /Applications/Maza-Qt (on Mac) or
+mazad/maza-qt (on Linux).
 
 Downgrade warning
-------------------
+-----------------
 
-Because release 0.10.0 and later makes use of headers-first synchronization and
-parallel block download (see further), the block files and databases are not
-backwards-compatible with pre-0.10 versions of Bitcoin Core or other software:
+### Downgrade to a version < 0.12.2.2
 
-* Blocks will be stored on disk out of order (in the order they are
-received, really), which makes it incompatible with some tools or
-other programs. Reindexing using earlier versions will also not work
-anymore as a result of this.
+Because release 0.12.2.2 included the [per-UTXO fix](release-notes/maza/release-notes-0.12.2.2.md#per-utxo-fix)
+which changed the structure of the internal database, you will have to reindex
+the database if you decide to use any pre-0.12.2.2 version.
 
-* The block index database will now hold headers for which no block is
-stored on disk, which earlier versions won't support.
+Wallet forward or backward compatibility was not affected.
 
-If you want to be able to downgrade smoothly, make a backup of your entire data
-directory. Without this your node will need start syncing (or importing from
-bootstrap.dat) anew afterwards. It is possible that the data from a completely
-synchronised 0.10 node may be usable in older versions as-is, but this is not
-supported and may break as soon as the older version attempts to reindex.
+### Downgrade to 0.12.2.2/3, 0.12.3.1/2
 
-This does not affect wallet forward or backward compatibility.
+Downgrading to these versions does not require any additional actions, should be
+fully compatible.
+
 
 Notable changes
 ===============
 
-This fixes a serious problem on Windows with data directories that have non-ASCII
-characters (https://github.com/bitcoin/bitcoin/issues/6078).
+Fix crash bug with duplicate inputs within a transaction
+--------------------------------------------------------
 
-For other platforms there are no notable changes.
+There was a critical bug discovered in Bitcoin Core's codebase recently which
+can cause node receiving a block to crash https://github.com/bitcoin/bitcoin/pull/14247
 
-For the notable changes in 0.10, refer to the release notes
-at https://github.com/bitcoin/bitcoin/blob/v0.10.0/doc/release-notes.md
+0.12.3.3 Change log
+===================
 
-0.10.2 Change log
-=================
-
-Detailed release notes follow. This overview includes changes that affect external
-behavior, not code moves, refactors or string updates.
-
-Wallet:
-- `824c011` fix boost::get usage with boost 1.58
-
-Miscellaneous:
-- `da65606` Avoid crash on start in TestBlockValidity with gen=1.
-- `424ae66` don't imbue boost::filesystem::path with locale "C" on windows (fixes #6078)
+See detailed [set of changes](https://github.com/mazacoin/maza/compare/v0.12.3.2...mazapay:v0.12.3.3).
 
 Credits
 =======
 
-Thanks to everyone who directly contributed to this release:
+Thanks to everyone who directly contributed to this release,
+as well as everyone who submitted issues and reviewed pull requests.
 
-- Cory Fields
-- Gregory Maxwell
-- Jonas Schnelli
-- Wladimir J. van der Laan
 
-And all those who contributed additional code review and/or security research:
+Older releases
+==============
 
-- dexX7
-- Pieter Wuille
-- vayvanne
+Maza was previously known as Darkcoin.
 
-As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
+Darkcoin tree 0.8.x was a fork of Litecoin tree 0.8, original name was XCoin
+which was first released on Jan/18/2014.
+
+Darkcoin tree 0.9.x was the open source implementation of masternodes based on
+the 0.8.x tree and was first released on Mar/13/2014.
+
+Darkcoin tree 0.10.x used to be the closed source implementation of Darksend
+which was released open source on Sep/25/2014.
+
+Maza Core tree 0.11.x was a fork of Bitcoin Core tree 0.9,
+Darkcoin was rebranded to Maza.
+
+Maza Core tree 0.12.0.x was a fork of Bitcoin Core tree 0.10.
+
+Maza Core tree 0.12.1.x was a fork of Bitcoin Core tree 0.12.
+
+These release are considered obsolete. Old release notes can be found here:
+
+- [v0.12.3.2](https://github.com/mazacoin/maza/blob/master/doc/release-notes/maza/release-notes-0.12.3.2.md) released Jul/09/2018
+- [v0.12.3.1](https://github.com/mazacoin/maza/blob/master/doc/release-notes/maza/release-notes-0.12.3.1.md) released Jul/03/2018
+- [v0.12.2.3](https://github.com/mazacoin/maza/blob/master/doc/release-notes/maza/release-notes-0.12.2.3.md) released Jan/12/2018
+- [v0.12.2.2](https://github.com/mazacoin/maza/blob/master/doc/release-notes/maza/release-notes-0.12.2.2.md) released Dec/17/2017
+- [v0.12.2](https://github.com/mazacoin/maza/blob/master/doc/release-notes/maza/release-notes-0.12.2.md) released Nov/08/2017
+- [v0.12.1](https://github.com/mazacoin/maza/blob/master/doc/release-notes/maza/release-notes-0.12.1.md) released Feb/06/2017
+- [v0.12.0](https://github.com/mazacoin/maza/blob/master/doc/release-notes/maza/release-notes-0.12.0.md) released Jun/15/2015
+- [v0.11.2](https://github.com/mazacoin/maza/blob/master/doc/release-notes/maza/release-notes-0.11.2.md) released Mar/04/2015
+- [v0.11.1](https://github.com/mazacoin/maza/blob/master/doc/release-notes/maza/release-notes-0.11.1.md) released Feb/10/2015
+- [v0.11.0](https://github.com/mazacoin/maza/blob/master/doc/release-notes/maza/release-notes-0.11.0.md) released Jan/15/2015
+- [v0.10.x](https://github.com/mazacoin/maza/blob/master/doc/release-notes/maza/release-notes-0.10.0.md) released Sep/25/2014
+- [v0.9.x](https://github.com/mazacoin/maza/blob/master/doc/release-notes/maza/release-notes-0.9.0.md) released Mar/13/2014
+

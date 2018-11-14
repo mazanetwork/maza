@@ -1,6 +1,6 @@
-#!/usr/bin/env python2
-# Copyright (c) 2014 The Bitcoin Core developers
-# Distributed under the MIT/X11 software license, see the accompanying
+#!/usr/bin/env python3
+# Copyright (c) 2014-2016 The Bitcoin Core developers
+# Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 """
@@ -10,7 +10,7 @@ Test case is:
 4 nodes. 1 2 and 3 send transactions between each other,
 fourth node is a miner.
 1 2 3 each mine a block to start, then
-Miner creates 100 blocks so 1 2 3 each have 50 mature
+Miner creates 100 blocks so 1 2 3 each have 500 mature
 coins to spend.
 Then 5 iterations of 1/2/3 sending coins amongst
 themselves to get transactions in the wallets,
@@ -23,7 +23,7 @@ Miner then generates 101 more blocks, so any
 transaction fees paid mature.
 
 Sanity check:
-  Sum(1,2,3,4 balances) == 114*50
+  Sum(1,2,3,4 balances) == 114*500
 
 1/2/3 are shutdown, and their wallets erased.
 Then restore using wallet.dat backup. And
@@ -33,23 +33,24 @@ Shutdown again, restore using importwallet,
 and confirm again balances are correct.
 """
 
-from test_framework import BitcoinTestFramework
-from util import *
+from test_framework.test_framework import BitcoinTestFramework
+from test_framework.util import *
 from random import randint
 import logging
-logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
+logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO, stream=sys.stdout)
 
 class WalletBackupTest(BitcoinTestFramework):
 
-    def setup_chain(self):
-        logging.info("Initializing test directory "+self.options.tmpdir)
-        initialize_chain_clean(self.options.tmpdir, 4)
+    def __init__(self):
+        super().__init__()
+        self.setup_clean_chain = True
+        self.num_nodes = 4
+        # nodes 1, 2,3 are spenders, let's give them a keypool=100
+        self.extra_args = [["-keypool=100"], ["-keypool=100"], ["-keypool=100"], []]
 
     # This mirrors how the network was setup in the bash test
     def setup_network(self, split=False):
-        # nodes 1, 2,3 are spenders, let's give them a keypool=100
-        extra_args = [["-keypool=100"], ["-keypool=100"], ["-keypool=100"], []]
-        self.nodes = start_nodes(4, self.options.tmpdir, extra_args)
+        self.nodes = start_nodes(self.num_nodes, self.options.tmpdir, self.extra_args)
         connect_nodes(self.nodes[0], 3)
         connect_nodes(self.nodes[1], 3)
         connect_nodes(self.nodes[2], 3)
@@ -77,7 +78,8 @@ class WalletBackupTest(BitcoinTestFramework):
         # Have the miner (node3) mine a block.
         # Must sync mempools before mining.
         sync_mempools(self.nodes)
-        self.nodes[3].setgenerate(True, 1)
+        self.nodes[3].generate(1)
+        sync_blocks(self.nodes)
 
     # As above, this mirrors the original bash test.
     def start_three(self):
@@ -101,18 +103,18 @@ class WalletBackupTest(BitcoinTestFramework):
 
     def run_test(self):
         logging.info("Generating initial blockchain")
-        self.nodes[0].setgenerate(True, 1)
+        self.nodes[0].generate(1)
         sync_blocks(self.nodes)
-        self.nodes[1].setgenerate(True, 1)
+        self.nodes[1].generate(1)
         sync_blocks(self.nodes)
-        self.nodes[2].setgenerate(True, 1)
+        self.nodes[2].generate(1)
         sync_blocks(self.nodes)
-        self.nodes[3].setgenerate(True, 100)
+        self.nodes[3].generate(100)
         sync_blocks(self.nodes)
 
-        assert_equal(self.nodes[0].getbalance(), 50)
-        assert_equal(self.nodes[1].getbalance(), 50)
-        assert_equal(self.nodes[2].getbalance(), 50)
+        assert_equal(self.nodes[0].getbalance(), 500)
+        assert_equal(self.nodes[1].getbalance(), 500)
+        assert_equal(self.nodes[2].getbalance(), 500)
         assert_equal(self.nodes[3].getbalance(), 0)
 
         logging.info("Creating transactions")
@@ -134,7 +136,7 @@ class WalletBackupTest(BitcoinTestFramework):
             self.do_one_round()
 
         # Generate 101 more blocks, so any fees paid mature
-        self.nodes[3].setgenerate(True, 101)
+        self.nodes[3].generate(101)
         self.sync_all()
 
         balance0 = self.nodes[0].getbalance()
@@ -144,8 +146,8 @@ class WalletBackupTest(BitcoinTestFramework):
         total = balance0 + balance1 + balance2 + balance3
 
         # At this point, there are 214 blocks (103 for setup, then 10 rounds, then 101.)
-        # 114 are mature, so the sum of all wallets should be 114 * 50 = 5700.
-        assert_equal(total, 5700)
+        # 114 are mature, so the sum of all wallets should be 114 * 500 = 57000.
+        assert_equal(total, 57000)
 
         ##
         # Test restoring spender wallets from backups

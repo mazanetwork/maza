@@ -1,63 +1,69 @@
-DIST_SUBDIRS = secp256k1
-AM_LDFLAGS = $(PTHREAD_CFLAGS) $(LIBTOOL_LDFLAGS)
+# Copyright (c) 2013-2016 The Bitcoin Core developers
+# Copyright (c) 2014-2018 The Maza Core developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+DIST_SUBDIRS = secp256k1 univalue
 
-if EMBEDDED_LEVELDB
-LEVELDB_CPPFLAGS += -I$(srcdir)/leveldb/include
-LEVELDB_CPPFLAGS += -I$(srcdir)/leveldb/helpers/memenv
-LIBLEVELDB += $(builddir)/leveldb/libleveldb.a
-LIBMEMENV  += $(builddir)/leveldb/libmemenv.a
+AM_LDFLAGS = $(PTHREAD_CFLAGS) $(LIBTOOL_LDFLAGS) $(HARDENED_LDFLAGS)
+AM_CXXFLAGS = $(HARDENED_CXXFLAGS) $(ERROR_CXXFLAGS)
+AM_CPPFLAGS = $(HARDENED_CPPFLAGS)
+EXTRA_LIBRARIES =
 
-# NOTE: This dependency is not strictly necessary, but without it make may try to build both in parallel, which breaks the LevelDB build system in a race
-$(LIBLEVELDB): $(LIBMEMENV)
+if EMBEDDED_UNIVALUE
+LIBUNIVALUE = univalue/libunivalue.la
 
-$(LIBLEVELDB) $(LIBMEMENV):
-	@echo "Building LevelDB ..." && $(MAKE) -C $(@D) $(@F) CXX="$(CXX)" \
-	  CC="$(CC)" PLATFORM=$(TARGET_OS) AR="$(AR)" $(LEVELDB_TARGET_FLAGS) \
-          OPT="$(CXXFLAGS) $(CPPFLAGS)"
+$(LIBUNIVALUE): $(wildcard univalue/lib/*) $(wildcard univalue/include/*)
+	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
+else
+LIBUNIVALUE = $(UNIVALUE_LIBS)
 endif
 
 BITCOIN_CONFIG_INCLUDES=-I$(builddir)/config
-BITCOIN_INCLUDES=-I$(builddir) -I$(builddir)/obj $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS) $(CRYPTO_CFLAGS) $(SSL_CFLAGS)
+BITCOIN_INCLUDES=-I$(builddir) -I$(builddir)/obj $(BDB_CPPFLAGS) $(BOOST_CPPFLAGS) $(LEVELDB_CPPFLAGS) $(CRYPTO_CFLAGS) $(SSL_CFLAGS)
 
 BITCOIN_INCLUDES += -I$(srcdir)/secp256k1/include
+BITCOIN_INCLUDES += $(UNIVALUE_CFLAGS)
 
 LIBBITCOIN_SERVER=libmaza_server.a
-LIBBITCOIN_WALLET=libmaza_wallet.a
 LIBBITCOIN_COMMON=libmaza_common.a
+LIBBITCOIN_CONSENSUS=libmaza_consensus.a
 LIBBITCOIN_CLI=libmaza_cli.a
 LIBBITCOIN_UTIL=libmaza_util.a
 LIBBITCOIN_CRYPTO=crypto/libmaza_crypto.a
-LIBBITCOIN_UNIVALUE=univalue/libmaza_univalue.a
-LIBBITCOINQT=qt/libbitcoinqt.a
+LIBBITCOINQT=qt/libmazaqt.a
 LIBSECP256K1=secp256k1/libsecp256k1.la
+
+if ENABLE_ZMQ
+LIBBITCOIN_ZMQ=libmaza_zmq.a
+endif
+if BUILD_BITCOIN_LIBS
+LIBBITCOINCONSENSUS=libmazaconsensus.la
+endif
+if ENABLE_WALLET
+LIBBITCOIN_WALLET=libmaza_wallet.a
+endif
 
 $(LIBSECP256K1): $(wildcard secp256k1/src/*) $(wildcard secp256k1/include/*)
 	$(AM_V_at)$(MAKE) $(AM_MAKEFLAGS) -C $(@D) $(@F)
 
 # Make is not made aware of per-object dependencies to avoid limiting building parallelization
 # But to build the less dependent modules first, we manually select their order here:
-EXTRA_LIBRARIES = \
-  crypto/libmaza_crypto.a \
-  libmaza_util.a \
-  libmaza_common.a \
-  univalue/libmaza_univalue.a \
-  libmaza_server.a \
-  libmaza_cli.a
-if ENABLE_WALLET
-BITCOIN_INCLUDES += $(BDB_CPPFLAGS)
-EXTRA_LIBRARIES += libmaza_wallet.a
-endif
+EXTRA_LIBRARIES += \
+  $(LIBBITCOIN_CRYPTO) \
+  $(LIBBITCOIN_UTIL) \
+  $(LIBBITCOIN_COMMON) \
+  $(LIBBITCOIN_CONSENSUS) \
+  $(LIBBITCOIN_SERVER) \
+  $(LIBBITCOIN_CLI) \
+  $(LIBBITCOIN_WALLET) \
+  $(LIBBITCOIN_ZMQ)
 
-if BUILD_BITCOIN_LIBS
-lib_LTLIBRARIES = libmazaconsensus.la
-LIBBITCOIN_CONSENSUS=libmazaconsensus.la
-else
-LIBBITCOIN_CONSENSUS=
-endif
+lib_LTLIBRARIES = $(LIBBITCOINCONSENSUS)
 
 bin_PROGRAMS =
 TESTS =
+BENCHMARKS =
 
 if BUILD_BITCOIND
   bin_PROGRAMS += mazad
@@ -67,15 +73,22 @@ if BUILD_BITCOIN_UTILS
   bin_PROGRAMS += maza-cli maza-tx
 endif
 
-.PHONY: FORCE
+.PHONY: FORCE check-symbols check-security
 # maza core #
 BITCOIN_CORE_H = \
+  addrdb.h \
+  activemasternode.h \
+  addressindex.h \
+  spentindex.h \
   addrman.h \
   alert.h \
-  allocators.h \
-  amount.h \
   base58.h \
+  bip39.h \
+  bip39_english.h \
+  blockencodings.h \
   bloom.h \
+  cachemap.h \
+  cachemultimap.h \
   chain.h \
   chainparams.h \
   chainparamsbase.h \
@@ -83,74 +96,106 @@ BITCOIN_CORE_H = \
   checkpoints.h \
   checkqueue.h \
   clientversion.h \
-  coincontrol.h \
   coins.h \
   compat.h \
+  compat/byteswap.h \
+  compat/endian.h \
+  compat/sanity.h \
   compressor.h \
-  primitives/block.h \
-  primitives/transaction.h \
+  consensus/consensus.h \
   core_io.h \
-  crypter.h \
-  db.h \
-  eccryptoverify.h \
-  ecwrapper.h \
-  hash.h \
+  core_memusage.h \
+  cuckoocache.h \
+  privatesend.h \
+  privatesend-client.h \
+  privatesend-server.h \
+  privatesend-util.h \
+  dsnotificationinterface.h \
+  governance.h \
+  governance-classes.h \
+  governance-exceptions.h \
+  governance-object.h \
+  governance-validators.h \
+  governance-vote.h \
+  governance-votedb.h \
+  flat-database.h \
+  hdchain.h \
+  httprpc.h \
+  httpserver.h \
+  indirectmap.h \
   init.h \
+  instantx.h \
   key.h \
+  keepass.h \
   keystore.h \
-  leveldbwrapper.h \
+  dbwrapper.h \
   limitedmap.h \
-  main.h \
+  masternode.h \
+  masternode-payments.h \
+  masternode-sync.h \
+  masternodeman.h \
+  masternodeconfig.h \
+  memusage.h \
   merkleblock.h \
+  messagesigner.h \
   miner.h \
-  mruset.h \
-  netbase.h \
   net.h \
+  net_processing.h \
+  netaddress.h \
+  netbase.h \
+  netfulfilledman.h \
+  netmessagemaker.h \
   noui.h \
+  policy/fees.h \
+  policy/policy.h \
+  policy/rbf.h \
   pow.h \
   protocol.h \
-  pubkey.h \
   random.h \
-  rpcclient.h \
-  rpcprotocol.h \
-  rpcserver.h \
-  script/interpreter.h \
-  script/script.h \
+  reverselock.h \
+  rpc/client.h \
+  rpc/protocol.h \
+  rpc/server.h \
+  rpc/register.h \
+  scheduler.h \
   script/sigcache.h \
   script/sign.h \
   script/standard.h \
-  script/script_error.h \
-  serialize.h \
+  script/ismine.h \
+  spork.h \
   streams.h \
+  support/allocators/secure.h \
+  support/allocators/zeroafterfree.h \
+  support/cleanse.h \
+  support/events.h \
+  support/lockedpool.h \
   sync.h \
   threadsafety.h \
+  threadinterrupt.h \
   timedata.h \
-  tinyformat.h \
+  torcontrol.h \
   txdb.h \
   txmempool.h \
   ui_interface.h \
-  uint256.h \
   undo.h \
   util.h \
-  utilstrencodings.h \
   utilmoneystr.h \
   utiltime.h \
-  version.h \
-  wallet.h \
-  wallet_ismine.h \
-  walletdb.h \
-  compat/sanity.h
+  validation.h \
+  validationinterface.h \
+  versionbits.h \
+  wallet/coincontrol.h \
+  wallet/crypter.h \
+  wallet/db.h \
+  wallet/rpcwallet.h \
+  wallet/wallet.h \
+  wallet/walletdb.h \
+  warnings.h \
+  zmq/zmqabstractnotifier.h \
+  zmq/zmqconfig.h\
+  zmq/zmqnotificationinterface.h \
+  zmq/zmqpublishnotifier.h
 
-JSON_H = \
-  json/json_spirit.h \
-  json/json_spirit_error_position.h \
-  json/json_spirit_reader.h \
-  json/json_spirit_reader_template.h \
-  json/json_spirit_stream_reader.h \
-  json/json_spirit_utils.h \
-  json/json_spirit_value.h \
-  json/json_spirit_writer.h \
-  json/json_spirit_writer_template.h
 
 obj/build.h: FORCE
 	@$(MKDIR_P) $(builddir)/obj
@@ -158,255 +203,370 @@ obj/build.h: FORCE
 	  $(abs_top_srcdir)
 libmaza_util_a-clientversion.$(OBJEXT): obj/build.h
 
-# server: shared between bitcoind and bitcoin-qt
-libmaza_server_a_CPPFLAGS = $(BITCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS)
+# server: shared between mazad and maza-qt
+libmaza_server_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(MINIUPNPC_CPPFLAGS) $(EVENT_CFLAGS) $(EVENT_PTHREADS_CFLAGS)
+libmaza_server_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libmaza_server_a_SOURCES = \
+  activemasternode.cpp \
   addrman.cpp \
+  addrdb.cpp \
   alert.cpp \
   bloom.cpp \
+  blockencodings.cpp \
   chain.cpp \
   checkpoints.cpp \
+  dsnotificationinterface.cpp \
+  httprpc.cpp \
+  httpserver.cpp \
   init.cpp \
-  leveldbwrapper.cpp \
-  main.cpp \
+  instantx.cpp \
+  dbwrapper.cpp \
+  governance.cpp \
+  governance-classes.cpp \
+  governance-object.cpp \
+  governance-validators.cpp \
+  governance-vote.cpp \
+  governance-votedb.cpp \
+  masternode.cpp \
+  masternode-payments.cpp \
+  masternode-sync.cpp \
+  masternodeconfig.cpp \
+  masternodeman.cpp \
   merkleblock.cpp \
+  messagesigner.cpp \
   miner.cpp \
   net.cpp \
+  netfulfilledman.cpp \
+  net_processing.cpp \
   noui.cpp \
+  policy/fees.cpp \
+  policy/policy.cpp \
   pow.cpp \
+  privatesend.cpp \
+  privatesend-server.cpp \
   rest.cpp \
-  rpcblockchain.cpp \
-  rpcmining.cpp \
-  rpcmisc.cpp \
-  rpcnet.cpp \
-  rpcrawtransaction.cpp \
-  rpcserver.cpp \
+  rpc/blockchain.cpp \
+  rpc/masternode.cpp \
+  rpc/governance.cpp \
+  rpc/mining.cpp \
+  rpc/misc.cpp \
+  rpc/net.cpp \
+  rpc/rawtransaction.cpp \
+  rpc/server.cpp \
   script/sigcache.cpp \
+  script/ismine.cpp \
+  sendalert.cpp \
+  spork.cpp \
   timedata.cpp \
+  torcontrol.cpp \
   txdb.cpp \
   txmempool.cpp \
-  $(JSON_H) \
+  ui_interface.cpp \
+  validation.cpp \
+  validationinterface.cpp \
+  versionbits.cpp \
   $(BITCOIN_CORE_H)
+
+if ENABLE_ZMQ
+libmaza_zmq_a_CPPFLAGS = $(BITCOIN_INCLUDES) $(ZMQ_CFLAGS)
+libmaza_zmq_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libmaza_zmq_a_SOURCES = \
+  zmq/zmqabstractnotifier.cpp \
+  zmq/zmqnotificationinterface.cpp \
+  zmq/zmqpublishnotifier.cpp
+endif
+
 
 # wallet: shared between mazad and maza-qt, but only linked
 # when wallet enabled
-libmaza_wallet_a_CPPFLAGS = $(BITCOIN_INCLUDES)
+libmaza_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+libmaza_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libmaza_wallet_a_SOURCES = \
-  db.cpp \
-  crypter.cpp \
-  rpcdump.cpp \
-  rpcwallet.cpp \
-  wallet.cpp \
-  wallet_ismine.cpp \
-  walletdb.cpp \
+  keepass.cpp \
+  privatesend-client.cpp \
+  privatesend-util.cpp \
+  wallet/crypter.cpp \
+  wallet/db.cpp \
+  wallet/rpcdump.cpp \
+  wallet/rpcwallet.cpp \
+  wallet/wallet.cpp \
+  wallet/walletdb.cpp \
+  policy/rbf.cpp \
   $(BITCOIN_CORE_H)
 
 # crypto primitives library
-crypto_libmaza_crypto_a_CPPFLAGS = $(BITCOIN_CONFIG_INCLUDES)
+crypto_libmaza_crypto_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_CONFIG_INCLUDES) $(PIC_FLAGS)
+crypto_libmaza_crypto_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) $(PIC_FLAGS)
 crypto_libmaza_crypto_a_SOURCES = \
-  crypto/sha1.cpp \
-  crypto/sha256.cpp \
-  crypto/sha512.cpp \
-  crypto/hmac_sha256.cpp \
-  crypto/rfc6979_hmac_sha256.cpp \
-  crypto/hmac_sha512.cpp \
-  crypto/ripemd160.cpp \
+  crypto/aes.cpp \
+  crypto/aes.h \
   crypto/common.h \
-  crypto/sha256.h \
-  crypto/sha512.h \
+  crypto/hmac_sha256.cpp \
   crypto/hmac_sha256.h \
-  crypto/rfc6979_hmac_sha256.h \
+  crypto/hmac_sha512.cpp \
   crypto/hmac_sha512.h \
+  crypto/ripemd160.cpp \
+  crypto/ripemd160.h \
+  crypto/sha1.cpp \
   crypto/sha1.h \
-  crypto/ripemd160.h
+  crypto/sha256.cpp \
+  crypto/sha256.h \
+  crypto/sha512.cpp \
+  crypto/sha512.h
 
-# univalue JSON library
-univalue_libmaza_univalue_a_SOURCES = \
-  univalue/univalue.cpp \
-  univalue/univalue_read.cpp \
-  univalue/univalue_write.cpp \
-  univalue/univalue_escapes.h \
-  univalue/univalue.h
+
+# consensus: shared between all executables that validate any consensus rules.
+libmaza_consensus_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+libmaza_consensus_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+libmaza_consensus_a_SOURCES = \
+  amount.h \
+  arith_uint256.cpp \
+  arith_uint256.h \
+  consensus/merkle.cpp \
+  consensus/merkle.h \
+  consensus/params.h \
+  consensus/validation.h \
+  hash.cpp \
+  hash.h \
+  prevector.h \
+  primitives/block.cpp \
+  primitives/block.h \
+  primitives/transaction.cpp \
+  primitives/transaction.h \
+  pubkey.cpp \
+  pubkey.h \
+  script/mazaconsensus.cpp \
+  script/interpreter.cpp \
+  script/interpreter.h \
+  script/script.cpp \
+  script/script.h \
+  script/script_error.cpp \
+  script/script_error.h \
+  serialize.h \
+  tinyformat.h \
+  uint256.cpp \
+  uint256.h \
+  utilstrencodings.cpp \
+  utilstrencodings.h \
+  version.h
 
 # common: shared between mazad, and maza-qt and non-server tools
-libmaza_common_a_CPPFLAGS = $(BITCOIN_INCLUDES)
+libmaza_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+libmaza_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libmaza_common_a_SOURCES = \
-  allocators.cpp \
   amount.cpp \
   base58.cpp \
+  bip39.cpp \
   chainparams.cpp \
   coins.cpp \
   compressor.cpp \
-  primitives/block.cpp \
-  primitives/transaction.cpp \
   core_read.cpp \
   core_write.cpp \
-  eccryptoverify.cpp \
-  ecwrapper.cpp \
-  hash.cpp \
+  hdchain.cpp \
   key.cpp \
   keystore.cpp \
+  netaddress.cpp \
   netbase.cpp \
   protocol.cpp \
-  pubkey.cpp \
-  script/interpreter.cpp \
-  script/script.cpp \
+  scheduler.cpp \
   script/sign.cpp \
   script/standard.cpp \
-  script/script_error.cpp \
+  warnings.cpp \
   $(BITCOIN_CORE_H)
 
 # util: shared between all executables.
 # This library *must* be included to make sure that the glibc
 # backward-compatibility objects and their sanity checks are linked.
-libmaza_util_a_CPPFLAGS = $(BITCOIN_INCLUDES)
+libmaza_util_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+libmaza_util_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libmaza_util_a_SOURCES = \
-  compat/strnlen.cpp \
-  compat/glibc_sanity.cpp \
-  compat/glibcxx_sanity.cpp \
+  support/lockedpool.cpp \
   chainparamsbase.cpp \
   clientversion.cpp \
+  compat/glibc_sanity.cpp \
+  compat/glibcxx_sanity.cpp \
+  compat/strnlen.cpp \
   random.cpp \
-  rpcprotocol.cpp \
+  rpc/protocol.cpp \
+  support/cleanse.cpp \
   sync.cpp \
-  uint256.cpp \
+  threadinterrupt.cpp \
   util.cpp \
-  utilstrencodings.cpp \
   utilmoneystr.cpp \
+  utilstrencodings.cpp \
   utiltime.cpp \
   $(BITCOIN_CORE_H)
 
 if GLIBC_BACK_COMPAT
 libmaza_util_a_SOURCES += compat/glibc_compat.cpp
-libmaza_util_a_SOURCES += compat/glibcxx_compat.cpp
 endif
 
 # cli: shared between maza-cli and maza-qt
-libmaza_cli_a_CPPFLAGS = $(BITCOIN_INCLUDES)
+libmaza_cli_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+libmaza_cli_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libmaza_cli_a_SOURCES = \
-  rpcclient.cpp \
+  rpc/client.cpp \
   $(BITCOIN_CORE_H)
 
 nodist_libmaza_util_a_SOURCES = $(srcdir)/obj/build.h
 #
 
 # mazad binary #
+mazad_SOURCES = mazad.cpp
+mazad_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+mazad_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+mazad_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+
+if TARGET_WINDOWS
+mazad_SOURCES += mazad-res.rc
+endif
+
 mazad_LDADD = \
   $(LIBBITCOIN_SERVER) \
   $(LIBBITCOIN_COMMON) \
-  $(LIBBITCOIN_UNIVALUE) \
+  $(LIBUNIVALUE) \
   $(LIBBITCOIN_UTIL) \
+  $(LIBBITCOIN_WALLET) \
+  $(LIBBITCOIN_ZMQ) \
+  $(LIBBITCOIN_CONSENSUS) \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBLEVELDB) \
   $(LIBMEMENV) \
   $(LIBSECP256K1)
 
-if ENABLE_WALLET
-mazad_LDADD += libmaza_wallet.a
-endif
-mazad_SOURCES = bitcoind.cpp
-#
-
-if TARGET_WINDOWS
-mazad_SOURCES += bitcoind-res.rc
-endif
-
-mazad_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS)
-mazad_CPPFLAGS = $(BITCOIN_INCLUDES)
-mazad_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+mazad_LDADD += $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS)
 
 # maza-cli binary #
+maza_cli_SOURCES = maza-cli.cpp
+maza_cli_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS)
+maza_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+maza_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+
+if TARGET_WINDOWS
+maza_cli_SOURCES += maza-cli-res.rc
+endif
+
 maza_cli_LDADD = \
   $(LIBBITCOIN_CLI) \
+  $(LIBUNIVALUE) \
   $(LIBBITCOIN_UTIL) \
-  $(BOOST_LIBS) \
-  $(SSL_LIBS) \
-  $(CRYPTO_LIBS)
-
-maza_cli_SOURCES = \
-  bitcoin-cli.cpp
-
-maza_cli_CPPFLAGS = $(BITCOIN_INCLUDES)
+  $(LIBBITCOIN_CRYPTO)
+maza_cli_LDADD += $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
 #
 
 # maza-tx binary #
-maza_tx_LDADD = \
-  $(LIBBITCOIN_UNIVALUE) \
-  $(LIBBITCOIN_COMMON) \
-  $(LIBBITCOIN_UTIL) \
-  $(LIBBITCOIN_CRYPTO) \
-  $(LIBSECP256K1) \
-  $(BOOST_LIBS) \
-  $(CRYPTO_LIBS)
-
-maza_tx_SOURCES = bitcoin-tx.cpp
-maza_tx_CPPFLAGS = $(BITCOIN_INCLUDES)
-#
+maza_tx_SOURCES = maza-tx.cpp
+maza_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+maza_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 maza_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-maza_cli_SOURCES += bitcoin-cli-res.rc
+maza_tx_SOURCES += maza-tx-res.rc
 endif
-maza_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
+maza_tx_LDADD = \
+  $(LIBUNIVALUE) \
+  $(LIBBITCOIN_COMMON) \
+  $(LIBBITCOIN_UTIL) \
+  $(LIBBITCOIN_CONSENSUS) \
+  $(LIBBITCOIN_CRYPTO) \
+  $(LIBSECP256K1)
+
+maza_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
+#
+
+# mazaconsensus library #
 if BUILD_BITCOIN_LIBS
-include_HEADERS = script/bitcoinconsensus.h
-libmazaconsensus_la_SOURCES = \
-  primitives/transaction.cpp \
-  crypto/hmac_sha512.cpp \
-  crypto/sha1.cpp \
-  crypto/sha256.cpp \
-  crypto/sha512.cpp \
-  crypto/ripemd160.cpp \
-  eccryptoverify.cpp \
-  ecwrapper.cpp \
-  hash.cpp \
-  pubkey.cpp \
-  script/script.cpp \
-  script/interpreter.cpp \
-  script/bitcoinconsensus.cpp \
-  uint256.cpp \
-  utilstrencodings.cpp
+include_HEADERS = script/mazaconsensus.h
+libmazaconsensus_la_SOURCES = $(crypto_libmaza_crypto_a_SOURCES) $(libmaza_consensus_a_SOURCES)
 
 if GLIBC_BACK_COMPAT
   libmazaconsensus_la_SOURCES += compat/glibc_compat.cpp
-  libmazaconsensus_la_SOURCES += compat/glibcxx_compat.cpp
 endif
 
-libmazaconsensus_la_LDFLAGS = -no-undefined $(RELDFLAGS)
-libmazaconsensus_la_LIBADD = $(CRYPTO_LIBS)
-libmazaconsensus_la_CPPFLAGS = $(CRYPTO_CFLAGS) -I$(builddir)/obj -DBUILD_BITCOIN_INTERNAL
-if USE_LIBSECP256K1
-libmazaconsensus_la_LIBADD += secp256k1/libsecp256k1.la
-endif
-endif
+libmazaconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS)
+libmazaconsensus_la_LIBADD = $(LIBSECP256K1)
+libmazaconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include -DBUILD_BITCOIN_INTERNAL
+libmazaconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 
-CLEANFILES = leveldb/libleveldb.a leveldb/libmemenv.a *.gcda *.gcno
+endif
+#
+
+CTAES_DIST =  crypto/ctaes/bench.c
+CTAES_DIST += crypto/ctaes/ctaes.c
+CTAES_DIST += crypto/ctaes/ctaes.h
+CTAES_DIST += crypto/ctaes/README.md
+CTAES_DIST += crypto/ctaes/test.c
+
+CLEANFILES = $(EXTRA_LIBRARIES)
+
+CLEANFILES += *.gcda *.gcno
+CLEANFILES += compat/*.gcda compat/*.gcno
+CLEANFILES += consensus/*.gcda consensus/*.gcno
+CLEANFILES += crypto/*.gcda crypto/*.gcno
+CLEANFILES += policy/*.gcda policy/*.gcno
+CLEANFILES += primitives/*.gcda primitives/*.gcno
+CLEANFILES += script/*.gcda script/*.gcno
+CLEANFILES += support/*.gcda support/*.gcno
+CLEANFILES += univalue/*.gcda univalue/*.gcno
+CLEANFILES += wallet/*.gcda wallet/*.gcno
+CLEANFILES += wallet/test/*.gcda wallet/test/*.gcno
+CLEANFILES += zmq/*.gcda zmq/*.gcno
 
 DISTCLEANFILES = obj/build.h
 
-EXTRA_DIST = leveldb
+EXTRA_DIST = $(CTAES_DIST)
+
+
+config/maza-config.h: config/stamp-h1
+	@$(MAKE) -C $(top_builddir) $(subdir)/$(@)
+config/stamp-h1: $(top_srcdir)/$(subdir)/config/maza-config.h.in $(top_builddir)/config.status
+	$(AM_V_at)$(MAKE) -C $(top_builddir) $(subdir)/$(@)
+$(top_srcdir)/$(subdir)/config/maza-config.h.in:  $(am__configure_deps)
+	$(AM_V_at)$(MAKE) -C $(top_srcdir) $(subdir)/config/maza-config.h.in
 
 clean-local:
-	-$(MAKE) -C leveldb clean
 	-$(MAKE) -C secp256k1 clean
-	rm -f leveldb/*/*.gcno leveldb/helpers/memenv/*.gcno
+	-$(MAKE) -C univalue clean
+	-rm -f leveldb/*/*.gcda leveldb/*/*.gcno leveldb/helpers/memenv/*.gcda leveldb/helpers/memenv/*.gcno
 	-rm -f config.h
+	-rm -rf test/__pycache__
 
 .rc.o:
 	@test -f $(WINDRES)
-	$(AM_V_GEN) $(WINDRES) -DWINDRES_PREPROC -i $< -o $@
+	## FIXME: How to get the appropriate modulename_CPPFLAGS in here?
+	$(AM_V_GEN) $(WINDRES) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(CPPFLAGS) -DWINDRES_PREPROC -i $< -o $@
 
 .mm.o:
 	$(AM_V_CXX) $(OBJCXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
-	  $(CPPFLAGS) $(AM_CXXFLAGS) $(QT_INCLUDES) $(CXXFLAGS)  -c -o $@ $<
+	  $(CPPFLAGS) $(AM_CXXFLAGS) $(QT_INCLUDES) $(AM_CXXFLAGS) $(PIE_FLAGS) $(CXXFLAGS) -c -o $@ $<
+
+check-symbols: $(bin_PROGRAMS)
+if GLIBC_BACK_COMPAT
+	@echo "Checking glibc back compat..."
+	$(AM_V_at) READELF=$(READELF) CPPFILT=$(CPPFILT) $(top_srcdir)/contrib/devtools/symbol-check.py < $(bin_PROGRAMS)
+endif
+
+check-security: $(bin_PROGRAMS)
+if HARDEN
+	@echo "Checking binary security..."
+	$(AM_V_at) READELF=$(READELF) OBJDUMP=$(OBJDUMP) $(top_srcdir)/contrib/devtools/security-check.py < $(bin_PROGRAMS)
+endif
 
 %.pb.cc %.pb.h: %.proto
 	@test -f $(PROTOC)
-	$(AM_V_GEN) $(PROTOC) --cpp_out=$(@D) --proto_path=$(abspath $(<D) $<)
+	$(AM_V_GEN) $(PROTOC) --cpp_out=$(@D) --proto_path=$(<D) $<
+
+if EMBEDDED_LEVELDB
+include Makefile.leveldb.include
+endif
 
 if ENABLE_TESTS
 include Makefile.test.include
+endif
+
+if ENABLE_BENCH
+include Makefile.bench.include
 endif
 
 if ENABLE_QT

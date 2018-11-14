@@ -1,5 +1,5 @@
-// Copyright (c) 2011-2013 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_QT_GUIUTIL_H
@@ -14,6 +14,7 @@
 #include <QProgressBar>
 #include <QString>
 #include <QTableView>
+#include <QLabel>
 
 #include <boost/filesystem.hpp>
 
@@ -29,7 +30,7 @@ class QUrl;
 class QWidget;
 QT_END_NAMESPACE
 
-/** Utility functions used by the Bitcoin Qt UI.
+/** Utility functions used by the Maza Qt UI.
  */
 namespace GUIUtil
 {
@@ -37,14 +38,14 @@ namespace GUIUtil
     QString dateTimeStr(const QDateTime &datetime);
     QString dateTimeStr(qint64 nTime);
 
-    // Render Bitcoin addresses in monospace font
-    QFont bitcoinAddressFont();
+    // Return a monospace font
+    QFont fixedPitchFont();
 
     // Set up widgets for address and amounts
     void setupAddressWidget(QValidatedLineEdit *widget, QWidget *parent);
     void setupAmountWidget(QLineEdit *widget, QWidget *parent);
 
-    // Parse "bitcoin:" URI into recipient object, return true on successful parsing
+    // Parse "maza:" URI into recipient object, return true on successful parsing
     bool parseBitcoinURI(const QUrl &uri, SendCoinsRecipient *out);
     bool parseBitcoinURI(QString uri, SendCoinsRecipient *out);
     QString formatBitcoinURI(const SendCoinsRecipient &info);
@@ -63,6 +64,13 @@ namespace GUIUtil
        @see  TransactionView::copyLabel, TransactionView::copyAmount, TransactionView::copyAddress
      */
     void copyEntryData(QAbstractItemView *view, int column, int role=Qt::EditRole);
+
+    /** Return a field of the currently selected entry as a QString. Does nothing if nothing
+        is selected.
+       @param[in] column  Data column to extract from the model
+       @see  TransactionView::copyLabel, TransactionView::copyAmount, TransactionView::copyAddress
+     */
+    QList<QModelIndex> getEntryData(QAbstractItemView *view, int column);
 
     void setClipboard(const QString& str);
 
@@ -105,6 +113,15 @@ namespace GUIUtil
 
     // Open debug.log
     void openDebugLogfile();
+	
+    // Open maza.conf
+    void openConfigfile();	
+
+    // Open masternode.conf
+    void openMNConfigfile();	
+
+    // Browse backup folder
+    void showBackups();
 
     // Replace invalid default fonts with known good ones
     void SubstituteFonts(const QString& language);
@@ -132,7 +149,7 @@ namespace GUIUtil
      * Also makes sure the column widths are never larger than the table's viewport.
      * In Qt, all columns are resizable from the right, but it's not intuitive resizing the last column from the right.
      * Usually our second to last columns behave as if stretched, and when on strech mode, columns aren't resizable
-     * interactively or programatically.
+     * interactively or programmatically.
      *
      * This helper object takes care of this issue.
      *
@@ -142,7 +159,7 @@ namespace GUIUtil
         Q_OBJECT
 
         public:
-            TableViewLastColumnResizingFixer(QTableView* table, int lastColMinimumWidth, int allColsMinimumWidth);
+            TableViewLastColumnResizingFixer(QTableView* table, int lastColMinimumWidth, int allColsMinimumWidth, QObject *parent);
             void stretchColumnWidth(int column);
 
         private:
@@ -161,7 +178,7 @@ namespace GUIUtil
             void setViewHeaderResizeMode(int logicalIndex, QHeaderView::ResizeMode resizeMode);
             void resizeColumn(int nColumnIndex, int width);
 
-        private slots:
+        private Q_SLOTS:
             void on_sectionResized(int logicalIndex, int oldSize, int newSize);
             void on_geometriesChanged();
     };
@@ -169,11 +186,20 @@ namespace GUIUtil
     bool GetStartOnSystemStartup();
     bool SetStartOnSystemStartup(bool fAutoStart);
 
+    /** Modify Qt network specific settings on migration */
+    void migrateQtSettings();
+
     /** Save window size and position */
     void saveWindowGeometry(const QString& strSetting, QWidget *parent);
     /** Restore window size and position */
     void restoreWindowGeometry(const QString& strSetting, const QSize &defaultSizeIn, QWidget *parent);
 
+    /** Load global CSS theme */
+    QString loadStyleSheet();
+
+    /** Return name of current CSS theme */
+    QString getThemeName();
+    
     /* Convert QString to OS specific boost path through UTF-8 */
     boost::filesystem::path qstringToBoostPath(const QString &path);
 
@@ -188,21 +214,52 @@ namespace GUIUtil
 
     /* Format a CNodeCombinedStats.dPingTime into a user-readable string or display N/A, if 0*/
     QString formatPingTime(double dPingTime);
+
+    /* Format a CNodeCombinedStats.nTimeOffset into a user-readable string. */
+    QString formatTimeOffset(int64_t nTimeOffset);
+
+    QString formatNiceTimeOffset(qint64 secs);
+
+    class ClickableLabel : public QLabel
+    {
+        Q_OBJECT
+
+    Q_SIGNALS:
+        /** Emitted when the label is clicked. The relative mouse coordinates of the click are
+         * passed to the signal.
+         */
+        void clicked(const QPoint& point);
+    protected:
+        void mouseReleaseEvent(QMouseEvent *event);
+    };
     
+    class ClickableProgressBar : public QProgressBar
+    {
+        Q_OBJECT
+        
+    Q_SIGNALS:
+        /** Emitted when the progressbar is clicked. The relative mouse coordinates of the click are
+         * passed to the signal.
+         */
+        void clicked(const QPoint& point);
+    protected:
+        void mouseReleaseEvent(QMouseEvent *event);
+    };
+
 #if defined(Q_OS_MAC) && QT_VERSION >= 0x050000
     // workaround for Qt OSX Bug:
     // https://bugreports.qt-project.org/browse/QTBUG-15631
     // QProgressBar uses around 10% CPU even when app is in background
-    class ProgressBar : public QProgressBar
+    class ProgressBar : public ClickableProgressBar
     {
         bool event(QEvent *e) {
             return (e->type() != QEvent::StyleAnimationUpdate) ? QProgressBar::event(e) : false;
         }
     };
 #else
-    typedef QProgressBar ProgressBar;
+    typedef ClickableProgressBar ProgressBar;
 #endif
-    
+
 } // namespace GUIUtil
 
 #endif // BITCOIN_QT_GUIUTIL_H

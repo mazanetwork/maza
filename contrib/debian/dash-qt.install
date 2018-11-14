@@ -1,0 +1,6 @@
+usr/local/bin/maza-qt usr/bin
+share/pixmaps/maza32.xpm usr/share/pixmaps
+share/pixmaps/maza16.xpm usr/share/pixmaps
+share/pixmaps/maza128.png usr/share/pixmaps
+debian/maza-qt.desktop usr/share/applications
+debian/maza-qt.protocol usr/share/kde4/services/

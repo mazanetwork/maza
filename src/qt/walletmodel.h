@@ -1,5 +1,5 @@
-// Copyright (c) 2011-2014 The Bitcoin developers
-// Distributed under the MIT/X11 software license, see the accompanying
+// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_QT_WALLETMODEL_H
@@ -8,7 +8,10 @@
 #include "paymentrequestplus.h"
 #include "walletmodeltransaction.h"
 
-#include "allocators.h" /* for SecureString */
+#ifdef ENABLE_WALLET
+#include "wallet/wallet.h"
+#endif // ENABLE_WALLET
+#include "support/allocators/secure.h"
 
 #include <map>
 #include <vector>
@@ -17,6 +20,7 @@
 
 class AddressTableModel;
 class OptionsModel;
+class PlatformStyle;
 class RecentRequestsTableModel;
 class TransactionTableModel;
 class WalletModelTransaction;
@@ -36,17 +40,21 @@ QT_END_NAMESPACE
 class SendCoinsRecipient
 {
 public:
-    explicit SendCoinsRecipient() : amount(0), nVersion(SendCoinsRecipient::CURRENT_VERSION) { }
-    explicit SendCoinsRecipient(const QString &addr, const QString &label, const CAmount& amount, const QString &message):
-        address(addr), label(label), amount(amount), message(message), nVersion(SendCoinsRecipient::CURRENT_VERSION) {}
+    explicit SendCoinsRecipient() : amount(0), fSubtractFeeFromAmount(false), nVersion(SendCoinsRecipient::CURRENT_VERSION) { }
+    explicit SendCoinsRecipient(const QString &addr, const QString &_label, const CAmount& _amount, const QString &_message):
+        address(addr), label(_label), amount(_amount), message(_message), fSubtractFeeFromAmount(false), nVersion(SendCoinsRecipient::CURRENT_VERSION) {}
 
-    // If from an insecure payment request, this is used for storing
+    // If from an unauthenticated payment request, this is used for storing
     // the addresses, e.g. address-A<br />address-B<br />address-C.
     // Info: As we don't need to process addresses in here when using
     // payment requests, we can abuse it for displaying an address list.
     // Todo: This is a hack, should be replaced with a cleaner solution!
     QString address;
     QString label;
+#ifdef ENABLE_WALLET
+    AvailableCoinsType inputType;
+#endif // ENABLE_WALLET
+    bool fUseInstantSend;
     CAmount amount;
     // If from a payment request, this is used for storing the memo
     QString message;
@@ -56,13 +64,15 @@ public:
     // Empty if no authentication or invalid signature/cert/etc.
     QString authenticatedMerchant;
 
+    bool fSubtractFeeFromAmount; // memory only
+
     static const int CURRENT_VERSION = 1;
     int nVersion;
 
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action) {
         std::string sAddress = address.toStdString();
         std::string sLabel = label.toStdString();
         std::string sMessage = message.toStdString();
@@ -72,7 +82,6 @@ public:
         std::string sAuthenticatedMerchant = authenticatedMerchant.toStdString();
 
         READWRITE(this->nVersion);
-        nVersion = this->nVersion;
         READWRITE(sAddress);
         READWRITE(sLabel);
         READWRITE(amount);
@@ -98,7 +107,7 @@ class WalletModel : public QObject
     Q_OBJECT
 
 public:
-    explicit WalletModel(CWallet *wallet, OptionsModel *optionsModel, QObject *parent = 0);
+    explicit WalletModel(const PlatformStyle *platformStyle, CWallet *wallet, OptionsModel *optionsModel, QObject *parent = 0);
     ~WalletModel();
 
     enum StatusCode // Returned by sendCoins
@@ -111,14 +120,16 @@ public:
         DuplicateAddress,
         TransactionCreationFailed, // Error returned when wallet is still locked
         TransactionCommitFailed,
-        InsaneFee
+        AbsurdFee,
+        PaymentRequestExpired
     };
 
     enum EncryptionStatus
     {
-        Unencrypted,  // !wallet->IsCrypted()
-        Locked,       // wallet->IsCrypted() && wallet->IsLocked()
-        Unlocked      // wallet->IsCrypted() && !wallet->IsLocked()
+        Unencrypted,            // !wallet->IsCrypted()
+        Locked,                 // wallet->IsCrypted() && wallet->IsLocked(true)
+        UnlockedForMixingOnly,  // wallet->IsCrypted() && !wallet->IsLocked(true) && wallet->IsLocked()
+        Unlocked,               // wallet->IsCrypted() && !wallet->IsLocked()
     };
 
     OptionsModel *getOptionsModel();
@@ -129,6 +140,7 @@ public:
     CAmount getBalance(const CCoinControl *coinControl = NULL) const;
     CAmount getUnconfirmedBalance() const;
     CAmount getImmatureBalance() const;
+    CAmount getAnonymizedBalance() const;
     bool haveWatchOnly() const;
     CAmount getWatchBalance() const;
     CAmount getWatchUnconfirmedBalance() const;
@@ -141,9 +153,13 @@ public:
     // Return status record for SendCoins, contains error id + information
     struct SendCoinsReturn
     {
-        SendCoinsReturn(StatusCode status = OK):
-            status(status) {}
+        SendCoinsReturn(StatusCode _status = OK, QString _reasonCommitFailed = "")
+            : status(_status),
+              reasonCommitFailed(_reasonCommitFailed)
+        {
+        }
         StatusCode status;
+        QString reasonCommitFailed;
     };
 
     // prepare transaction for getting txfee before sending coins
@@ -155,8 +171,9 @@ public:
     // Wallet encryption
     bool setWalletEncrypted(bool encrypted, const SecureString &passphrase);
     // Passphrase only needed when unlocking
-    bool setWalletLocked(bool locked, const SecureString &passPhrase=SecureString());
+    bool setWalletLocked(bool locked, const SecureString &passPhrase=SecureString(), bool fMixing=false);
     bool changePassphrase(const SecureString &oldPass, const SecureString &newPass);
+
     // Wallet backup
     bool backupWallet(const QString &filename);
 
@@ -164,7 +181,7 @@ public:
     class UnlockContext
     {
     public:
-        UnlockContext(WalletModel *wallet, bool valid, bool relock);
+        UnlockContext(WalletModel *wallet, bool valid, bool was_locked, bool was_mixing);
         ~UnlockContext();
 
         bool isValid() const { return valid; }
@@ -175,14 +192,17 @@ public:
     private:
         WalletModel *wallet;
         bool valid;
-        mutable bool relock; // mutable, as it can be set to false by copying
+        mutable bool was_locked; // mutable, as it can be set to false by copying
+        mutable bool was_mixing; // mutable, as it can be set to false by copying
 
         void CopyFrom(const UnlockContext& rhs);
     };
 
-    UnlockContext requestUnlock();
+    UnlockContext requestUnlock(bool fForMixingOnly=false);
 
     bool getPubKey(const CKeyID &address, CPubKey& vchPubKeyOut) const;
+    bool havePrivKey(const CKeyID &address) const;
+    bool getPrivKey(const CKeyID &address, CKey& vchPrivKeyOut) const;
     void getOutputs(const std::vector<COutPoint>& vOutpoints, std::vector<COutput>& vOutputs);
     bool isSpent(const COutPoint& outpoint) const;
     void listCoins(std::map<QString, std::vector<COutput> >& mapCoins) const;
@@ -194,6 +214,15 @@ public:
 
     void loadReceiveRequests(std::vector<std::string>& vReceiveRequests);
     bool saveReceiveRequest(const std::string &sAddress, const int64_t nId, const std::string &sRequest);
+
+    bool transactionCanBeAbandoned(uint256 hash) const;
+    bool abandonTransaction(uint256 hash) const;
+
+    static bool isWalletEnabled();
+
+    bool hdEnabled() const;
+
+    int getDefaultConfirmTarget() const;
 
 private:
     CWallet *wallet;
@@ -212,11 +241,14 @@ private:
     CAmount cachedBalance;
     CAmount cachedUnconfirmedBalance;
     CAmount cachedImmatureBalance;
+    CAmount cachedAnonymizedBalance;
     CAmount cachedWatchOnlyBalance;
     CAmount cachedWatchUnconfBalance;
     CAmount cachedWatchImmatureBalance;
     EncryptionStatus cachedEncryptionStatus;
     int cachedNumBlocks;
+    int cachedTxLocks;
+    int cachedPrivateSendRounds;
 
     QTimer *pollTimer;
 
@@ -224,9 +256,9 @@ private:
     void unsubscribeFromCoreSignals();
     void checkBalanceChanged();
 
-signals:
+Q_SIGNALS:
     // Signal that balance in wallet changed
-    void balanceChanged(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
+    void balanceChanged(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance, const CAmount& anonymizedBalance,
                         const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance);
 
     // Encryption status of wallet changed
@@ -235,7 +267,7 @@ signals:
     // Signal emitted when wallet needs to be unlocked
     // It is valid behaviour for listeners to keep the wallet locked after this signal;
     // this means that the unlocking failed or was cancelled.
-    void requireUnlock();
+    void requireUnlock(bool fForMixingOnly=false);
 
     // Fired when a message should be reported to the user
     void message(const QString &title, const QString &message, unsigned int style);
@@ -249,7 +281,7 @@ signals:
     // Watch-only address added
     void notifyWatchonlyChanged(bool fHaveWatchonly);
 
-public slots:
+public Q_SLOTS:
     /* Wallet status might have changed */
     void updateStatus();
     /* New transaction, or transaction changed status */
