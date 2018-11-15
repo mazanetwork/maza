@@ -1,6 +1,4 @@
-// Copyright (c) 2014-2017 The Dash Core developers 
-// Copyright (c) 2014-2018 The Maza Core developers 
-
+// Copyright (c) 2014-2017 The Dash Core developers
 
 #include "governance-validators.h"
 #include "utilstrencodings.h"
@@ -8,7 +6,7 @@
 #include "data/proposals_valid.json.h"
 #include "data/proposals_invalid.json.h"
 
-#include "test/test_maza.h"
+#include "test/test_dash.h"
 
 #include <iostream>
 #include <fstream>

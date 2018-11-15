@@ -1,8 +1,6 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Dash Core developers 
-// Copyright (c) 2014-2018 The Maza Core developers 
-
+// Copyright (c) 2014-2017 The Dash Core developers
 
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -141,8 +139,8 @@ public:
         consensus.DIP0001Height = 1350000;
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
 		consensus.startingDifficulty = uint256S("00000003ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-        consensus.nPowTargetTimespan = 8 * 60; // Maza: 8 minutes
-        consensus.nPowTargetSpacing = 2 * 60; // Maza: 2 minutes
+        consensus.nPowTargetTimespan = 8 * 60; // Dash: 8 minutes
+        consensus.nPowTargetSpacing = 2 * 60; // Dash: 2 minutes
         consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
         consensus.nPowDGWHeight = 100000;
@@ -195,17 +193,17 @@ public:
         assert(genesis.hashMerkleRoot == uint256S("0x62d496378e5834989dd9594cfc168dbb76f84a39bbda18286cddc7d1d1589f4f"));
 
 
-        vSeeds.push_back(CDNSSeedData("mazacoin.org", "node.mazacoin.org"));
+        vSeeds.push_back(CDNSSeedData("dashpay.org", "node.dashpay.org"));
         
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,50);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,9);
         base58Prefixes[SECRET_KEY]     = std::vector<unsigned char>(1,224);
-        // Maza BIP32 pubkeys start with 'xpub' (Bitcoin defaults)
+        // Dash BIP32 pubkeys start with 'xpub' (Bitcoin defaults)
         base58Prefixes[EXT_PUBLIC_KEY] = boost::assign::list_of(0x04)(0x88)(0xB2)(0x1E).convert_to_container<std::vector<unsigned char> >();
-        // Maza BIP32 prvkeys start with 'xprv' (Bitcoin defaults)
+        // Dash BIP32 prvkeys start with 'xprv' (Bitcoin defaults)
         base58Prefixes[EXT_SECRET_KEY] = boost::assign::list_of(0x04)(0x88)(0xAD)(0xE4).convert_to_container<std::vector<unsigned char> >();
-        // Maza BIP44 coin type is '13'
+        // Dash BIP44 coin type is '13'
         nExtCoinType = 13;
 
         vFixedSeeds = std::vector<SeedSpec6>(pnSeed6_main, pnSeed6_main + ARRAYLEN(pnSeed6_main));
@@ -268,8 +266,8 @@ public:
         consensus.DIP0001Height = 5500;
         consensus.powLimit = uint256S("00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
 		consensus.startingDifficulty = uint256S("00000003ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-        consensus.nPowTargetTimespan = 8 * 60; // Maza: 8 minutes
-        consensus.nPowTargetSpacing = 2 * 60; // Maza: 2 minutes
+        consensus.nPowTargetTimespan = 8 * 60; // Dash: 8 minutes
+        consensus.nPowTargetSpacing = 2 * 60; // Dash: 2 minutes
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = false;
         consensus.nPowDGWHeight = 10;
@@ -317,14 +315,14 @@ public:
 
         vFixedSeeds.clear();
         vSeeds.clear();
-        vSeeds.push_back(CDNSSeedData("mazatest.cryptoadhd.com", "mazatest.cryptoadhd.com"));
+        vSeeds.push_back(CDNSSeedData("dashtest.cryptoadhd.com", "dashtest.cryptoadhd.com"));
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,88);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,188);
         base58Prefixes[SECRET_KEY]     = std::vector<unsigned char>(1,239);
         base58Prefixes[EXT_PUBLIC_KEY] = boost::assign::list_of(0x04)(0x35)(0x87)(0xCF).convert_to_container<std::vector<unsigned char> >();
         base58Prefixes[EXT_SECRET_KEY] = boost::assign::list_of(0x04)(0x35)(0x83)(0x94).convert_to_container<std::vector<unsigned char> >();
-        // Testnet Maza BIP44 coin type is '1' (All coin's testnet default)
+        // Testnet Dash BIP44 coin type is '1' (All coin's testnet default)
         nExtCoinType = 1;
 
         fMiningRequiresPeers = true;
@@ -384,8 +382,8 @@ public:
         consensus.BIP66Height = 1; // BIP66 activated immediately on devnet
         consensus.DIP0001Height = 2; // DIP0001 activated immediately on devnet
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 1
-        consensus.nPowTargetTimespan = 24 * 60 * 60; // Maza: 1 day
-        consensus.nPowTargetSpacing = 2.5 * 60; // Maza: 2.5 minutes
+        consensus.nPowTargetTimespan = 24 * 60 * 60; // Dash: 1 day
+        consensus.nPowTargetSpacing = 2.5 * 60; // Dash: 2.5 minutes
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = false;
         consensus.nPowDGWHeight = 4001;
@@ -438,20 +436,20 @@ public:
 
         vFixedSeeds.clear();
         vSeeds.clear();
-        //vSeeds.push_back(CDNSSeedData("mazacoin.org",  "devnet-seed.mazacoin.org"));
+        //vSeeds.push_back(CDNSSeedData("dashpay.org",  "devnet-seed.dashpay.org"));
 
-        // Testnet Maza addresses start with 'y'
+        // Testnet Dash addresses start with 'y'
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,140);
-        // Testnet Maza script addresses start with '8' or '9'
+        // Testnet Dash script addresses start with '8' or '9'
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,19);
         // Testnet private keys start with '9' or 'c' (Bitcoin defaults)
         base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,239);
-        // Testnet Maza BIP32 pubkeys start with 'tpub' (Bitcoin defaults)
+        // Testnet Dash BIP32 pubkeys start with 'tpub' (Bitcoin defaults)
         base58Prefixes[EXT_PUBLIC_KEY] = boost::assign::list_of(0x04)(0x35)(0x87)(0xCF).convert_to_container<std::vector<unsigned char> >();
-        // Testnet Maza BIP32 prvkeys start with 'tprv' (Bitcoin defaults)
+        // Testnet Dash BIP32 prvkeys start with 'tprv' (Bitcoin defaults)
         base58Prefixes[EXT_SECRET_KEY] = boost::assign::list_of(0x04)(0x35)(0x83)(0x94).convert_to_container<std::vector<unsigned char> >();
 
-        // Testnet Maza BIP44 coin type is '1' (All coin's testnet default)
+        // Testnet Dash BIP44 coin type is '1' (All coin's testnet default)
         nExtCoinType = 1;
 
         fMiningRequiresPeers = true;
@@ -513,8 +511,8 @@ public:
         consensus.BIP66Height = 1251; // BIP66 activated on regtest (Used in rpc activation tests)
         consensus.DIP0001Height = 2000;
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"); // ~uint256(0) >> 1
-        consensus.nPowTargetTimespan = 8 * 60; // Maza: 8 hours
-        consensus.nPowTargetSpacing = 2 * 60; // Maza: 2 minutes
+        consensus.nPowTargetTimespan = 8 * 60; // Dash: 8 hours
+        consensus.nPowTargetSpacing = 2 * 60; // Dash: 2 minutes
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = true;
         consensus.nPowDGWHeight = 10; // same as testnet
@@ -547,8 +545,8 @@ public:
 
         genesis = CreateGenesisBlock(1390748221, 4, 0x207fffff, 1, 5000 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        //assert(consensus.hashGenesisBlock == uint256S("0x57939ce0a96bf42965fee5956528a456d0edfb879b8bd699bcbb4786d27b979d")); // Has not been defined in Maza
-        //assert(genesis.hashMerkleRoot == uint256S("0xe0028eb9648db56b1ac77cf090b99048a8007e2bb64b68f092c03c7f56a662c7")); // Has not been defined in Maza
+        //assert(consensus.hashGenesisBlock == uint256S("0x57939ce0a96bf42965fee5956528a456d0edfb879b8bd699bcbb4786d27b979d")); // Has not been defined in Dash
+        //assert(genesis.hashMerkleRoot == uint256S("0xe0028eb9648db56b1ac77cf090b99048a8007e2bb64b68f092c03c7f56a662c7")); // Has not been defined in Dash
 
         vFixedSeeds.clear(); //!< Regtest mode doesn't have any fixed seeds.
         vSeeds.clear();      //!< Regtest mode doesn't have any DNS seeds.
@@ -562,12 +560,12 @@ public:
 
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
 
-        // privKey: cP4EKFyJsHT39LDqgdcB43Y3YXjNyjb5Fuas1GQSeAtjnZWmZEQK  //(Need to get for maza regtest)
-        strSporkAddress = "yj949n1UH6fDhw6HtVE5VMj2iSTaSWBMcW"; //(Need to get for maza regtest)
+        // privKey: cP4EKFyJsHT39LDqgdcB43Y3YXjNyjb5Fuas1GQSeAtjnZWmZEQK  //(Need to get for dash regtest)
+        strSporkAddress = "yj949n1UH6fDhw6HtVE5VMj2iSTaSWBMcW"; //(Need to get for dash regtest)
 
         checkpointData = (CCheckpointData){
             boost::assign::map_list_of
-            ( 0, uint256S("0x000008ca1832a4baf228eb1553c03d3a2c8e02399550dd6ea8d65cec3ef23d2e")) //(Need to get for maza regtest)
+            ( 0, uint256S("0x000008ca1832a4baf228eb1553c03d3a2c8e02399550dd6ea8d65cec3ef23d2e")) //(Need to get for dash regtest)
         };
 
         chainTxData = ChainTxData{
@@ -576,18 +574,18 @@ public:
             0
         };
 
-        // Regtest Maza addresses start with 'y'
+        // Regtest Dash addresses start with 'y'
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,140);
-        // Regtest Maza script addresses start with '8' or '9'
+        // Regtest Dash script addresses start with '8' or '9'
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,19);
         // Regtest private keys start with '9' or 'c' (Bitcoin defaults)
         base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,239);
-        // Regtest Maza BIP32 pubkeys start with 'tpub' (Bitcoin defaults)
+        // Regtest Dash BIP32 pubkeys start with 'tpub' (Bitcoin defaults)
         base58Prefixes[EXT_PUBLIC_KEY] = boost::assign::list_of(0x04)(0x35)(0x87)(0xCF).convert_to_container<std::vector<unsigned char> >();
-        // Regtest Maza BIP32 prvkeys start with 'tprv' (Bitcoin defaults)
+        // Regtest Dash BIP32 prvkeys start with 'tprv' (Bitcoin defaults)
         base58Prefixes[EXT_SECRET_KEY] = boost::assign::list_of(0x04)(0x35)(0x83)(0x94).convert_to_container<std::vector<unsigned char> >();
 
-        // Regtest Maza BIP44 coin type is '1' (All coin's testnet default)
+        // Regtest Dash BIP44 coin type is '1' (All coin's testnet default)
         nExtCoinType = 1;
    }
 

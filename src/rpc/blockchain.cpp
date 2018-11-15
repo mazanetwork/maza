@@ -1,8 +1,6 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Dash Core developers 
-// Copyright (c) 2014-2018 The Maza Core developers 
-
+// Copyright (c) 2014-2017 The Dash Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -1064,8 +1062,8 @@ UniValue gettxout(const JSONRPCRequest& request)
             "     \"hex\" : \"hex\",        (string) \n"
             "     \"reqSigs\" : n,          (numeric) Number of required signatures\n"
             "     \"type\" : \"pubkeyhash\", (string) The type, eg pubkeyhash\n"
-            "     \"addresses\" : [          (array of string) array of maza addresses\n"
-            "        \"mazaaddress\"     (string) maza address\n"
+            "     \"addresses\" : [          (array of string) array of dash addresses\n"
+            "        \"dashaddress\"     (string) dash address\n"
             "        ,...\n"
             "     ]\n"
             "  },\n"

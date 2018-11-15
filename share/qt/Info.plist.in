@@ -29,13 +29,13 @@
   <string>????</string>
 
   <key>CFBundleExecutable</key>
-  <string>Maza-Qt</string>
+  <string>Dash-Qt</string>
 
   <key>LSHasLocalizedDisplayName</key>
   <true/>
 
   <key>CFBundleIdentifier</key>
-  <string>org.maza.Maza-Qt</string>
+  <string>org.dash.Dash-Qt</string>
 
   <key>CFBundleURLTypes</key>
   <array>
@@ -43,10 +43,10 @@
       <key>CFBundleTypeRole</key>
       <string>Editor</string>
       <key>CFBundleURLName</key>
-      <string>org.maza.MazaPayment</string>
+      <string>org.dash.DashPayment</string>
       <key>CFBundleURLSchemes</key>
       <array>
-        <string>maza</string>
+        <string>dash</string>
       </array>
     </dict>
   </array>
@@ -55,9 +55,9 @@
   <array>
     <dict>
       <key>UTTypeIdentifier</key>
-      <string>org.maza.paymentrequest</string>
+      <string>org.dash.paymentrequest</string>
       <key>UTTypeDescription</key>
-      <string>Maza payment request</string>
+      <string>Dash payment request</string>
       <key>UTTypeConformsTo</key>
       <array>
         <string>public.data</string>
@@ -65,10 +65,10 @@
       <key>UTTypeTagSpecification</key>
       <dict>
         <key>public.mime-type</key>
-        <string>application/x-maza-payment-request</string>
+        <string>application/x-dash-payment-request</string>
         <key>public.filename-extension</key>
         <array>
-          <string>mazapaymentrequest</string>
+          <string>dashpaymentrequest</string>
         </array>
       </dict>
     </dict>
@@ -81,7 +81,7 @@
       <string>Editor</string>
       <key>LSItemContentTypes</key>
       <array>
-        <string>org.maza.paymentrequest</string>
+        <string>org.dash.paymentrequest</string>
       </array>
       <key>LSHandlerRank</key>
       <string>Owner</string>

@@ -137,7 +137,7 @@
   </layout>
  </widget>
  <resources>
-  <include location="../maza.qrc"/>
+  <include location="../dash.qrc"/>
  </resources>
  <connections/>
 </ui>

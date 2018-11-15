@@ -1,6 +1,6 @@
 all:
-	$(MAKE) -C .. maza_test
+	$(MAKE) -C .. dash_test
 clean:
-	$(MAKE) -C .. maza_test_clean
+	$(MAKE) -C .. dash_test_clean
 check:
-	$(MAKE) -C .. maza_test_check
+	$(MAKE) -C .. dash_test_check

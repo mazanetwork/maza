@@ -6,12 +6,12 @@ reset-files.bash
 *.tar.gz
 
 *.exe
-src/maza
-src/mazad
-src/maza-cli
-src/maza-tx
-src/test/test_maza
-src/qt/test/test_maza-qt
+src/dash
+src/dashd
+src/dash-cli
+src/dash-tx
+src/test/test_dash
+src/qt/test/test_dash-qt
 
 # autoreconf
 Makefile.in
@@ -34,8 +34,8 @@ config.log
 config.status
 configure
 libtool
-src/config/maza-config.h
-src/config/maza-config.h.in
+src/config/dash-config.h
+src/config/dash-config.h.in
 src/config/stamp-h1
 share/setup.nsi
 share/qt/Info.plist
@@ -61,7 +61,7 @@ libconftest.dylib*
 *.o
 *.o-*
 *.patch
-.maza
+.dash
 *.a
 *.pb.cc
 *.pb.h
@@ -80,12 +80,12 @@ libconftest.dylib*
 # Compilation and Qt preprocessor part
 *.qm
 Makefile
-maza-qt
+dash-qt
 Bitcoin-Qt.app
 
 # Unit-tests
 Makefile.test
-maza-qt_test
+dash-qt_test
 src/test/buildenv.py
 
 # Resources cpp
@@ -99,7 +99,7 @@ build
 *.gcno
 *.gcda
 /*.info
-test_maza.coverage/
+test_dash.coverage/
 total.coverage/
 coverage_percent.txt
 
@@ -117,15 +117,15 @@ qa/cache/*
 .autotools
 /doc/doxygen/
 
-libmazaconsensus.pc
+libdashconsensus.pc
 contrib/devtools/split-debug.sh
-src/qt/maza-qt.bash
+src/qt/dash-qt.bash
 qa/pull-tester/tests-config.sh
 
 #development symlinks
-maza-cli
-mazad
-maza-qt
+dash-cli
+dashd
+dash-qt
 make
 
 /docker/bin

@@ -1,7 +1,7 @@
 Description
 ------------
 
-This directory contains data-driven tests for various aspects of Maza.
+This directory contains data-driven tests for various aspects of Dash.
 
 License
 --------

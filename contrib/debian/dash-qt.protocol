@@ -1,6 +1,6 @@
 [Protocol]
-exec=maza-qt '%u'
-protocol=maza
+exec=dash-qt '%u'
+protocol=dash
 input=none
 output=none
 helper=true

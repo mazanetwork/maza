@@ -1,6 +1,4 @@
-// Copyright (c) 2014-2017 The Dash Core developers 
-// Copyright (c) 2014-2018 The Maza Core developers 
-
+// Copyright (c) 2014-2017 The Dash Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #include "privatesend.h"
@@ -394,10 +392,10 @@ int CPrivateSend::GetDenominations(const std::vector<CTxOut>& vecTxOut, bool fSi
 bool CPrivateSend::GetDenominationsBits(int nDenom, std::vector<int> &vecBitsRet)
 {
     // ( bit on if present, 4 denominations example )
-    // bit 0 - 100MAZA+1
-    // bit 1 - 10MAZA+1
-    // bit 2 - 1MAZA+1
-    // bit 3 - .1MAZA+1
+    // bit 0 - 100DASH+1
+    // bit 1 - 10DASH+1
+    // bit 2 - 1DASH+1
+    // bit 3 - .1DASH+1
 
     int nMaxDenoms = vecStandardDenominations.size();
 
@@ -516,14 +514,14 @@ void CPrivateSend::SyncTransaction(const CTransaction& tx, const CBlockIndex *pi
 //TODO: Rename/move to core
 void ThreadCheckPrivateSend(CConnman& connman)
 {
-    if(fLiteMode) return; // disable all Maza specific functionality
+    if(fLiteMode) return; // disable all Dash specific functionality
 
     static bool fOneThread;
     if(fOneThread) return;
     fOneThread = true;
 
     // Make this thread recognisable as the PrivateSend thread
-    RenameThread("maza-ps");
+    RenameThread("dash-ps");
 
     unsigned int nTick = 0;
 

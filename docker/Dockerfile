@@ -1,6 +1,6 @@
 FROM debian:stretch
-LABEL maintainer="Maza Developers <dev@mazacoin.org>"
-LABEL description="Dockerised MazaCore, built from Travis"
+LABEL maintainer="Dash Developers <dev@dashpay.org>"
+LABEL description="Dockerised DashCore, built from Travis"
 
 RUN apt-get update && apt-get -y upgrade && apt-get clean && rm -fr /var/cache/apt/*
 
