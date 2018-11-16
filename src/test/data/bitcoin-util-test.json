@@ -1,5 +1,5 @@
 [
-  { "exec": "././dash-tx",
+  { "exec": "./dash-tx",
     "args": ["-create", "nversion=1"],
     "output_cmp": "blanktxv1.hex",
     "description": "Creates a blank v1 transaction"

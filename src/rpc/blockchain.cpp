@@ -1063,7 +1063,7 @@ UniValue gettxout(const JSONRPCRequest& request)
             "     \"reqSigs\" : n,          (numeric) Number of required signatures\n"
             "     \"type\" : \"pubkeyhash\", (string) The type, eg pubkeyhash\n"
             "     \"addresses\" : [          (array of string) array of dash addresses\n"
-            "        \"dashaddress\"     (string) dash address\n"
+            "        \"address\"     (string) dash address\n"
             "        ,...\n"
             "     ]\n"
             "  },\n"

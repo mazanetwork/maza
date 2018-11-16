@@ -14,7 +14,17 @@
 #include "uint256.h"
 #include "version.h"
 
-
+#include "crypto/sph_blake.h"
+#include "crypto/sph_bmw.h"
+#include "crypto/sph_groestl.h"
+#include "crypto/sph_jh.h"
+#include "crypto/sph_keccak.h"
+#include "crypto/sph_skein.h"
+#include "crypto/sph_luffa.h"
+#include "crypto/sph_cubehash.h"
+#include "crypto/sph_shavite.h"
+#include "crypto/sph_simd.h"
+#include "crypto/sph_echo.h"
 
 #include <vector>
 
@@ -199,6 +209,7 @@ public:
         return (*this);
     }
 };
+
 /** Compute the 256-bit hash of an object's serialization. */
 template<typename T>
 uint256 SerializeHash(const T& obj, int nType=SER_GETHASH, int nVersion=PROTOCOL_VERSION)
