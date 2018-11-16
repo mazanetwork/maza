@@ -62,7 +62,7 @@ env:
     - HOST=x86_64-unknown-linux-gnu PPA="ppa:bitcoin/bitcoin" PACKAGES="bc python3-zmq" DEP_OPTS="NO_QT=1 NO_UPNP=1" GOAL="install" BITCOIN_CONFIG="--enable-zmq --enable-glibc-back-compat --enable-reduce-exports" PYZMQ=true DOCKER_BUILD=true
 
 before_install:
-#    - git clone https://github.com/dashpay/dash_hash
+    - git clone https://github.com/dashpay/dash_hash
     - travis_retry sudo apt-get install python3-pip python3-dev
     - travis_retry sudo add-apt-repository ppa:ubuntu-wine/ppa -y
     - export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/python/d' | tr "\n" ":" | sed "s|::|:|g")
@@ -72,7 +72,7 @@ install:
     - if [ -n "$DPKG_ADD_ARCH" ]; then sudo dpkg --add-architecture "$DPKG_ADD_ARCH" ; fi
     - if [ -n "$PACKAGES" ]; then travis_retry sudo apt-get update; fi
     - if [ -n "$PACKAGES" ]; then travis_retry sudo apt-get install --no-install-recommends --no-upgrade -qq $PACKAGES; fi
-#    - cd dash_hash && python3 setup.py install --user && cd ..
+    - cd dash_hash && python3 setup.py install --user && cd ..
 before_script:
     - unset CC; unset CXX
     - unset DISPLAY

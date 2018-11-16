@@ -24,7 +24,7 @@ static const int64_t nMinActualTimespan = nAveragingTargetTimespan * (100 - nMax
 static const int64_t nMaxActualTimespan = nAveragingTargetTimespan * (100 + nMaxAdjustDown) / 100;
 	
 unsigned int static DarkGravityWave(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params) {
-    /* current difficulty formula, dash - DarkGravity v3, written by Evan Duffield - evan@dashpay.org */
+    /* current difficulty formula, dash - DarkGravity v3, written by Evan Duffield - evan@dash.org */
     const arith_uint256 bnPowLimit = UintToArith256(params.powLimit);
     int64_t nPastBlocks = 24;
 
@@ -115,8 +115,6 @@ unsigned int static DarkGravityWave(const CBlockIndex* pindexLast, const CBlockH
 
 unsigned int GetNextWorkRequiredBTC(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
 {
-
-
     unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
 	unsigned int nStartingDifficulty = UintToArith256(params.startingDifficulty).GetCompact();
     // Genesis block
@@ -167,11 +165,9 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     }
 }
 
-
 // for DIFF_BTC only!
 unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params& params)
-{
-	
+{	
     if (params.fPowNoRetargeting)
         return pindexLast->nBits;
 

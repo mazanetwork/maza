@@ -30,6 +30,9 @@
 
   <key>CFBundleExecutable</key>
   <string>Dash-Qt</string>
+  
+  <key>CFBundleName</key>
+  <string>Dash-Qt</string>
 
   <key>LSHasLocalizedDisplayName</key>
   <true/>

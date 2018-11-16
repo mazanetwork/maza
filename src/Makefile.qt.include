@@ -678,6 +678,7 @@ CLEAN_QT = $(nodist_qt_libdashqt_a_SOURCES) $(QT_QM) $(QT_FORMS_H) qt/*.gcda qt/
 
 CLEANFILES += $(CLEAN_QT)
 
+dash_qt_clean: FORCE
 	rm -f $(CLEAN_QT) $(qt_libdashqt_a_OBJECTS) $(qt_dash_qt_OBJECTS) qt/dash-qt$(EXEEXT) $(LIBBITCOINQT)
 
 dash_qt : qt/dash-qt$(EXEEXT)

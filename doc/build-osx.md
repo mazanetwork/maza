@@ -27,12 +27,12 @@ NOTE: Building with Qt4 is still supported, however, doing so could result in a 
 Build Dash Core
 ------------------------
 
-        git clone https://github.com/dash/dash.git
-        cd dash
-1. Clone the github tree to get the source code and go into the directory.
-### Building `dashd`
+1. Clone the Dash Core source code and cd into `dash`
 
-2.  Build dashd:
+        git clone https://github.com/dashpay/dash
+        cd dash
+
+2.  Build Dash:
 
     Configure and build the headless dash binaries as well as the GUI (if Qt is found).
 
