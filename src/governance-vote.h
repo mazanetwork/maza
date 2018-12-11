@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2014-2017 The Maza Network developers
 
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -13,7 +13,7 @@
 class CGovernanceVote;
 class CConnman;
 
-// INTENTION OF MASTERNODES REGARDING ITEM
+// INTENTION OF MAZANODES REGARDING ITEM
 enum vote_outcome_enum_t  {
     VOTE_OUTCOME_NONE      = 0,
     VOTE_OUTCOME_YES       = 1,
@@ -49,7 +49,7 @@ public:
 };
 
 //
-// CGovernanceVote - Allow a masternode node to vote and broadcast throughout the network
+// CGovernanceVote - Allow a mazanode node to vote and broadcast throughout the network
 //
 
 class CGovernanceVote
@@ -62,7 +62,7 @@ private:
     bool fValid; //if the vote is currently valid / counted
     bool fSynced; //if we've sent this to our peers
     int nVoteSignal; // see VOTE_ACTIONS above
-    COutPoint masternodeOutpoint;
+    COutPoint mazanodeOutpoint;
     uint256 nParentHash;
     int nVoteOutcome; // see VOTE_OUTCOMES above
     int64_t nTime;
@@ -74,7 +74,7 @@ private:
 
 public:
     CGovernanceVote();
-    CGovernanceVote(const COutPoint& outpointMasternodeIn, const uint256& nParentHashIn, vote_signal_enum_t eVoteSignalIn, vote_outcome_enum_t eVoteOutcomeIn);
+    CGovernanceVote(const COutPoint& outpointMazanodeIn, const uint256& nParentHashIn, vote_signal_enum_t eVoteSignalIn, vote_outcome_enum_t eVoteOutcomeIn);
 
     bool IsValid() const { return fValid; }
 
@@ -92,8 +92,8 @@ public:
 
     void SetSignature(const std::vector<unsigned char>& vchSigIn) { vchSig = vchSigIn; }
 
-    bool Sign(const CKey& keyMasternode, const CPubKey& pubKeyMasternode);
-    bool CheckSignature(const CPubKey& pubKeyMasternode) const;
+    bool Sign(const CKey& keyMazanode, const CPubKey& pubKeyMazanode);
+    bool CheckSignature(const CPubKey& pubKeyMazanode) const;
     bool IsValid(bool fSignatureCheck) const;
     void Relay(CConnman& connman) const;
 
@@ -101,7 +101,7 @@ public:
         return CGovernanceVoting::ConvertOutcomeToString(GetOutcome());
     }
 
-    const COutPoint& GetMasternodeOutpoint() const { return masternodeOutpoint; }
+    const COutPoint& GetMazanodeOutpoint() const { return mazanodeOutpoint; }
 
     /**
     *   GetHash()
@@ -124,14 +124,14 @@ public:
             CTxIn txin{};
             if (ser_action.ForRead()) {
                 READWRITE(txin);
-                masternodeOutpoint = txin.prevout;
+                mazanodeOutpoint = txin.prevout;
             } else {
-                txin = CTxIn(masternodeOutpoint);
+                txin = CTxIn(mazanodeOutpoint);
                 READWRITE(txin);
             }
         } else {
             // using new format directly
-            READWRITE(masternodeOutpoint);
+            READWRITE(mazanodeOutpoint);
         }
         READWRITE(nParentHash);
         READWRITE(nVoteOutcome);

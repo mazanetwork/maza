@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2014-2017 The Maza Network developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -180,7 +180,7 @@ class CDarksendQueue
 public:
     int nDenom;
     int nInputCount;
-    COutPoint masternodeOutpoint;
+    COutPoint mazanodeOutpoint;
     int64_t nTime;
     bool fReady; //ready for submit
     std::vector<unsigned char> vchSig;
@@ -190,7 +190,7 @@ public:
     CDarksendQueue() :
         nDenom(0),
         nInputCount(0),
-        masternodeOutpoint(COutPoint()),
+        mazanodeOutpoint(COutPoint()),
         nTime(0),
         fReady(false),
         vchSig(std::vector<unsigned char>()),
@@ -200,7 +200,7 @@ public:
     CDarksendQueue(int nDenom, int nInputCount, COutPoint outpoint, int64_t nTime, bool fReady) :
         nDenom(nDenom),
         nInputCount(nInputCount),
-        masternodeOutpoint(outpoint),
+        mazanodeOutpoint(outpoint),
         nTime(nTime),
         fReady(fReady),
         vchSig(std::vector<unsigned char>()),
@@ -223,14 +223,14 @@ public:
             CTxIn txin{};
             if (ser_action.ForRead()) {
                 READWRITE(txin);
-                masternodeOutpoint = txin.prevout;
+                mazanodeOutpoint = txin.prevout;
             } else {
-                txin = CTxIn(masternodeOutpoint);
+                txin = CTxIn(mazanodeOutpoint);
                 READWRITE(txin);
             }
         } else {
             // using new format directly
-            READWRITE(masternodeOutpoint);
+            READWRITE(mazanodeOutpoint);
         }
         READWRITE(nTime);
         READWRITE(fReady);
@@ -242,14 +242,14 @@ public:
     uint256 GetSignatureHash() const;
     /** Sign this mixing transaction
      *  \return true if all conditions are met:
-     *     1) we have an active Masternode,
-     *     2) we have a valid Masternode private key,
+     *     1) we have an active Mazanode,
+     *     2) we have a valid Mazanode private key,
      *     3) we signed the message successfully, and
      *     4) we verified the message successfully
      */
     bool Sign();
-    /// Check if we have a valid Masternode address
-    bool CheckSignature(const CPubKey& pubKeyMasternode) const;
+    /// Check if we have a valid Mazanode address
+    bool CheckSignature(const CPubKey& pubKeyMazanode) const;
 
     bool Relay(CConnman &connman);
 
@@ -258,13 +258,13 @@ public:
 
     std::string ToString() const
     {
-        return strprintf("nDenom=%d, nInputCount=%d, nTime=%lld, fReady=%s, fTried=%s, masternode=%s",
-                        nDenom, nInputCount, nTime, fReady ? "true" : "false", fTried ? "true" : "false", masternodeOutpoint.ToStringShort());
+        return strprintf("nDenom=%d, nInputCount=%d, nTime=%lld, fReady=%s, fTried=%s, mazanode=%s",
+                        nDenom, nInputCount, nTime, fReady ? "true" : "false", fTried ? "true" : "false", mazanodeOutpoint.ToStringShort());
     }
 
     friend bool operator==(const CDarksendQueue& a, const CDarksendQueue& b)
     {
-        return a.nDenom == b.nDenom && a.nInputCount == b.nInputCount && a.masternodeOutpoint == b.masternodeOutpoint && a.nTime == b.nTime && a.fReady == b.fReady;
+        return a.nDenom == b.nDenom && a.nInputCount == b.nInputCount && a.mazanodeOutpoint == b.mazanodeOutpoint && a.nTime == b.nTime && a.fReady == b.fReady;
     }
 };
 
@@ -279,14 +279,14 @@ private:
 
 public:
     CTransactionRef tx;
-    COutPoint masternodeOutpoint;
+    COutPoint mazanodeOutpoint;
     std::vector<unsigned char> vchSig;
     int64_t sigTime;
 
     CDarksendBroadcastTx() :
         nConfirmedHeight(-1),
         tx(MakeTransactionRef()),
-        masternodeOutpoint(),
+        mazanodeOutpoint(),
         vchSig(),
         sigTime(0)
         {}
@@ -294,7 +294,7 @@ public:
     CDarksendBroadcastTx(const CTransactionRef& _tx, COutPoint _outpoint, int64_t _sigTime) :
         nConfirmedHeight(-1),
         tx(_tx),
-        masternodeOutpoint(_outpoint),
+        mazanodeOutpoint(_outpoint),
         vchSig(),
         sigTime(_sigTime)
         {}
@@ -310,14 +310,14 @@ public:
             CTxIn txin{};
             if (ser_action.ForRead()) {
                 READWRITE(txin);
-                masternodeOutpoint = txin.prevout;
+                mazanodeOutpoint = txin.prevout;
             } else {
-                txin = CTxIn(masternodeOutpoint);
+                txin = CTxIn(mazanodeOutpoint);
                 READWRITE(txin);
             }
         } else {
             // using new format directly
-            READWRITE(masternodeOutpoint);
+            READWRITE(mazanodeOutpoint);
         }
         if (!(s.GetType() & SER_GETHASH)) {
             READWRITE(vchSig);
@@ -341,7 +341,7 @@ public:
     uint256 GetSignatureHash() const;
 
     bool Sign();
-    bool CheckSignature(const CPubKey& pubKeyMasternode) const;
+    bool CheckSignature(const CPubKey& pubKeyMazanode) const;
 
     void SetConfirmedHeight(int nConfirmedHeightIn) { nConfirmedHeight = nConfirmedHeightIn; }
     bool IsExpired(int nHeight);
@@ -356,7 +356,7 @@ protected:
     // The current mixing sessions in progress on the network
     std::vector<CDarksendQueue> vecDarksendQueue;
 
-    std::vector<CDarkSendEntry> vecEntries; // Masternode/clients entries
+    std::vector<CDarkSendEntry> vecEntries; // Mazanode/clients entries
 
     PoolState nState; // should be one of the POOL_STATE_XXX values
     int64_t nTimeLastSuccessfulStep; // the time when last successful mixing step was performed
@@ -406,7 +406,7 @@ public:
     static std::vector<CAmount> GetStandardDenominations() { return vecStandardDenominations; }
     static CAmount GetSmallestDenomination() { return vecStandardDenominations.back(); }
 
-    /// Get the denominations for a specific amount of dash.
+    /// Get the denominations for a specific amount of maza.
     static int GetDenominationsByAmounts(const std::vector<CAmount>& vecAmount);
 
     static bool IsDenominatedAmount(CAmount nInputAmount);

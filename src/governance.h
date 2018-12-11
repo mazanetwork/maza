@@ -1,11 +1,11 @@
-// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2014-2017 The Maza Network developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef GOVERNANCE_H
 #define GOVERNANCE_H
 
-//#define ENABLE_DASH_DEBUG
+//#define ENABLE_MAZA_DEBUG
 
 #include "bloom.h"
 #include "cachemap.h"
@@ -239,8 +239,8 @@ private:
     //   value - expiration time for deleted objects
     hash_time_m_t mapErasedGovernanceObjects;
 
-    object_info_m_t mapMasternodeOrphanObjects;
-    txout_int_m_t mapMasternodeOrphanCounter;
+    object_info_m_t mapMazanodeOrphanObjects;
+    txout_int_m_t mapMazanodeOrphanCounter;
 
     object_m_t mapPostponedObjects;
     hash_s_t setAdditionalRelayObjects;
@@ -251,7 +251,7 @@ private:
 
     vote_cmm_t cmmapOrphanVotes;
 
-    txout_m_t mapLastMasternodeObject;
+    txout_m_t mapLastMazanodeObject;
 
     hash_s_t setRequestedObjects;
 
@@ -323,7 +323,7 @@ public:
         cmapVoteToObject.Clear();
         cmapInvalidVotes.Clear();
         cmmapOrphanVotes.Clear();
-        mapLastMasternodeObject.clear();
+        mapLastMazanodeObject.clear();
     }
 
     std::string ToString() const;
@@ -347,7 +347,7 @@ public:
         READWRITE(cmapInvalidVotes);
         READWRITE(cmmapOrphanVotes);
         READWRITE(mapObjects);
-        READWRITE(mapLastMasternodeObject);
+        READWRITE(mapLastMazanodeObject);
         if(ser_action.ForRead() && (strVersion != SERIALIZATION_VERSION_STRING)) {
             Clear();
             return;
@@ -381,11 +381,11 @@ public:
 
     void AddSeenVote(const uint256& nHash, int status);
 
-    void MasternodeRateUpdate(const CGovernanceObject& govobj);
+    void MazanodeRateUpdate(const CGovernanceObject& govobj);
 
-    bool MasternodeRateCheck(const CGovernanceObject& govobj, bool fUpdateFailStatus = false);
+    bool MazanodeRateCheck(const CGovernanceObject& govobj, bool fUpdateFailStatus = false);
 
-    bool MasternodeRateCheck(const CGovernanceObject& govobj, bool fUpdateFailStatus, bool fForce, bool& fRateCheckBypassed);
+    bool MazanodeRateCheck(const CGovernanceObject& govobj, bool fUpdateFailStatus, bool fForce, bool& fRateCheckBypassed);
 
     bool ProcessVoteAndRelay(const CGovernanceVote& vote, CGovernanceException& exception, CConnman& connman) {
         bool fOK = ProcessVote(NULL, vote, exception, connman);
@@ -395,9 +395,9 @@ public:
         return fOK;
     }
 
-    void CheckMasternodeOrphanVotes(CConnman& connman);
+    void CheckMazanodeOrphanVotes(CConnman& connman);
 
-    void CheckMasternodeOrphanObjects(CConnman& connman);
+    void CheckMazanodeOrphanObjects(CConnman& connman);
 
     void CheckPostponedObjects(CConnman& connman);
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2014-2017 The Maza Network developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -71,7 +71,7 @@ public:
 
     std::vector<CGovernanceVote> GetVotes() const;
 
-    void RemoveVotesFromMasternode(const COutPoint& outpointMasternode);
+    void RemoveVotesFromMazanode(const COutPoint& outpointMazanode);
 
     ADD_SERIALIZE_METHODS;
 

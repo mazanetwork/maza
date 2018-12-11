@@ -1,7 +1,7 @@
 Protocol Documentation - 0.12.1
 =====================================
 
-This document describes the protocol extensions for all additional functionality build into the Dash protocol. This doesn't include any of the Bitcoin protocol, which has been left intact in the Dash project. For more information about the core protocol, please see https://en.bitcoin.it/w/index.php?title#Protocol_documentation&action#edit
+This document describes the protocol extensions for all additional functionality build into the Maza protocol. This doesn't include any of the Bitcoin protocol, which has been left intact in the Maza project. For more information about the core protocol, please see https://en.bitcoin.it/w/index.php?title#Protocol_documentation&action#edit
 
 ## Common Structures
 
@@ -71,61 +71,61 @@ Bitcoin Public Key https://bitcoin.org/en/glossary/public-key
 
 ### MNANNOUNCE - "mnb"
 
-CMasternodeBroadcast
+CMazanodeBroadcast
 
-Whenever a masternode comes online or a client is syncing, they will send this message which describes the masternode entry and how to validate messages from it.
+Whenever a mazanode comes online or a client is syncing, they will send this message which describes the mazanode entry and how to validate messages from it.
 
 | Field Size | Field Name | Data type | Description |
 | ---------- | ----------- | --------- | ---------- |
-| 36 | outpoint | [COutPoint](#coutpoint) | The unspent output which is holding 1000 DASH
-| # | addr | [CService](#cservice) | IPv4 address of the masternode
-| 33-65 | pubKeyCollateralAddress | [CPubKey](#cpubkey) | CPubKey of the main 1000 DASH unspent output
-| 33-65 | pubKeyMasternode | [CPubKey](#cpubkey) | CPubKey of the secondary signing key (For all other messaging other than announce message)
+| 36 | outpoint | [COutPoint](#coutpoint) | The unspent output which is holding 1000 MAZA
+| # | addr | [CService](#cservice) | IPv4 address of the mazanode
+| 33-65 | pubKeyCollateralAddress | [CPubKey](#cpubkey) | CPubKey of the main 1000 MAZA unspent output
+| 33-65 | pubKeyMazanode | [CPubKey](#cpubkey) | CPubKey of the secondary signing key (For all other messaging other than announce message)
 | 71-73 | sig | char[] | Signature of this message (verifiable via pubKeyCollateralAddress)
 | 8 | sigTime | int64_t | Time which the signature was created
-| 4 | nProtocolVersion | int | The protocol version of the masternode
-| # | lastPing | [CMasternodePing](#mnping---mnp) | The last known ping of the masternode
+| 4 | nProtocolVersion | int | The protocol version of the mazanode
+| # | lastPing | [CMazanodePing](#mnping---mnp) | The last known ping of the mazanode
 
 ### MNPING - "mnp"
 
-CMasternodePing
+CMazanodePing
 
-Every few minutes, masternodes ping the network with a message that propagates the whole network.
+Every few minutes, mazanodes ping the network with a message that propagates the whole network.
 
 | Field Size | Field Name | Data type | Description |
 | ---------- | ----------- | --------- | --------- |
-| 36 | masternodeOutpoint | [COutPoint](#coutpoint) | The unspent output of the masternode which is signing the message
+| 36 | mazanodeOutpoint | [COutPoint](#coutpoint) | The unspent output of the mazanode which is signing the message
 | 32 | blockHash | uint256 | Current chaintip blockhash minus 12
 | 8 | sigTime | int64_t | Signature time for this ping
-| 71-73 | vchSig | char[] | Signature of this message by masternode (verifiable via pubKeyMasternode)
+| 71-73 | vchSig | char[] | Signature of this message by mazanode (verifiable via pubKeyMazanode)
 | 1 | fSentinelIsCurrent | bool | true if last sentinel ping was current
-| 4 | nSentinelVersion | uint32_t | The version of Sentinel running on the masternode which is signing the message
-| 4 | nDaemonVersion | uint32_t | The version of dashd of the masternode which is signing the message (i.e. CLIENT_VERSION)
+| 4 | nSentinelVersion | uint32_t | The version of Sentinel running on the mazanode which is signing the message
+| 4 | nDaemonVersion | uint32_t | The version of mazad of the mazanode which is signing the message (i.e. CLIENT_VERSION)
 
-### MASTERNODEPAYMENTVOTE - "mnw"
+### MAZANODEPAYMENTVOTE - "mnw"
 
-CMasternodePaymentVote
+CMazanodePaymentVote
 
-When a new block is found on the network, a masternode quorum will be determined and those 10 selected masternodes will issue a masternode payment vote message to pick the next winning node.
+When a new block is found on the network, a mazanode quorum will be determined and those 10 selected mazanodes will issue a mazanode payment vote message to pick the next winning node.
 
 | Field Size | Field Name | Data type | Description |
 | ---------- | ----------- | --------- | ---------- |
-| 36 | masternodeOutpoint | [COutPoint](#coutpoint) | The unspent output of the masternode which is signing the message
+| 36 | mazanodeOutpoint | [COutPoint](#coutpoint) | The unspent output of the mazanode which is signing the message
 | 4 | nBlockHeight | int | The blockheight which the payee should be paid
 | ? | payeeAddress | CScript | The address to pay to
-| 71-73 | sig | char[] | Signature of the masternode which is signing the message
+| 71-73 | sig | char[] | Signature of the mazanode which is signing the message
 
 ### DSTX - "dstx"
 
 CDarksendBroadcastTx
 
-Masternodes can broadcast subsidised transactions without fees for the sake of security in mixing. This is done via the DSTX message.
+Mazanodes can broadcast subsidised transactions without fees for the sake of security in mixing. This is done via the DSTX message.
 
 | Field Size | Field Name | Data type | Description |
 | ---------- | ----------- | --------- | ---------- |
 | # | tx | [CTransaction](#ctransaction) | The transaction
-| 36 | masternodeOutpoint | [COutPoint](#coutpoint) | The unspent output of the masternode which is signing the message
-| 71-73 | vchSig | char[] | Signature of this message by masternode (verifiable via pubKeyMasternode)
+| 36 | mazanodeOutpoint | [COutPoint](#coutpoint) | The unspent output of the mazanode which is signing the message
+| 71-73 | vchSig | char[] | Signature of this message by mazanode (verifiable via pubKeyMazanode)
 | 8 | sigTime | int64_t | Time this message was signed
 
 ### DSSTATUSUPDATE - "dssu"
@@ -138,7 +138,7 @@ Mixing pool status update
 | 4 | nMsgState | int | Current state of mixing process
 | 4 | nMsgEntriesCount | int | Number of entries in the mixing pool
 | 4 | nMsgStatusUpdate | int | Update state and/or signal if entry was accepted or not
-| 4 | nMsgMessageID | int | ID of the typical masternode reply message
+| 4 | nMsgMessageID | int | ID of the typical mazanode reply message
 
 ### DSQUEUE - "dsq"
 
@@ -149,10 +149,10 @@ Asks users to sign final mixing tx message.
 | Field Size | Field Name | Data type | Description |
 | ---------- | ----------- | --------- | ---------- |
 | 4 | nDenom | int | Which denomination is allowed in this mixing session
-| 36 | masternodeOutpoint | [COutPoint](#coutpoint) | The unspent output of the masternode which is hosting this session
+| 36 | mazanodeOutpoint | [COutPoint](#coutpoint) | The unspent output of the mazanode which is hosting this session
 | 8 | nTime | int64_t | the time this DSQ was created
 | 1 | fReady | bool | if the mixing pool is ready to be executed
-| 66 | vchSig | char[] | Signature of this message by masternode (verifiable via pubKeyMasternode)
+| 66 | vchSig | char[] | Signature of this message by mazanode (verifiable via pubKeyMazanode)
 
 ### DSACCEPT - "dsa"
 
@@ -200,8 +200,8 @@ Transaction Lock Vote
 | ---------- | ----------- | --------- | ---------- |
 | 32 | txHash | uint256 | txid of the transaction to lock
 | 36 | outpoint | [COutPoint](#coutpoint) | The utxo to lock in this transaction
-| 36 | outpointMasternode | [COutPoint](#coutpoint) | The utxo of the masternode which is signing the vote
-| 71-73 | vchMasternodeSignature | char[] | Signature of this message by masternode (verifiable via pubKeyMasternode)
+| 36 | outpointMazanode | [COutPoint](#coutpoint) | The utxo of the mazanode which is signing the vote
+| 71-73 | vchMazanodeSignature | char[] | Signature of this message by mazanode (verifiable via pubKeyMazanode)
 
 ### MNGOVERNANCEOBJECT - "govobj"
 
@@ -217,23 +217,23 @@ A proposal, contract or setting.
 | 32 | nCollateralHash | uint256 | Hash of the collateral fee transaction
 | 0-16384 | strData | string | Data field - can be used for anything
 | 4 | nObjectType | int | ????
-| 36 | masternodeOutpoint | [COutPoint](#coutpoint) | The unspent output of the masternode which is signing this object
-| 66* | vchSig | char[] | Signature of the masternode (unclear if 66 is the correct size, but this is what it appears to be in most cases)
+| 36 | mazanodeOutpoint | [COutPoint](#coutpoint) | The unspent output of the mazanode which is signing this object
+| 66* | vchSig | char[] | Signature of the mazanode (unclear if 66 is the correct size, but this is what it appears to be in most cases)
 
 ### MNGOVERNANCEOBJECTVOTE - "govobjvote"
 
 Governance Vote
 
-Masternodes use governance voting in response to new proposals, contracts, settings or finalized budgets.
+Mazanodes use governance voting in response to new proposals, contracts, settings or finalized budgets.
 
 | Field Size | Field Name | Data type | Description |
 | ---------- | ----------- | --------- | ---------- |
-| 36 | masternodeOutpoint | [COutPoint](#coutpoint) | The unspent output of the masternode which is voting
+| 36 | mazanodeOutpoint | [COutPoint](#coutpoint) | The unspent output of the mazanode which is voting
 | 32 | nParentHash | uint256 | Object which we're voting on (proposal, contract, setting or final budget)
 | 4 | nVoteOutcome | int | ???
 | 4 | nVoteSignal | int | ???
 | 8 | nTime | int64_t | Time which the vote was created
-| 66* | vchSig | char[] | Signature of the masternode (unclear if 66 is the correct size, but this is what it appears to be in most cases)
+| 66* | vchSig | char[] | Signature of the mazanode (unclear if 66 is the correct size, but this is what it appears to be in most cases)
 
 ### SPORK - "spork"
 
@@ -254,36 +254,36 @@ Spork
 | ---------- | ---------- | ----------- | ----------- |
 | 10001 | 2 | INSTANTSEND_ENABLED | Turns on and off InstantSend network wide
 | 10002 | 3 | INSTANTSEND_BLOCK_FILTERING | Turns on and off InstantSend block filtering
-| 10004 | 5 | INSTANTSEND_MAX_VALUE | Controls the max value for an InstantSend transaction (currently 2000 dash)
-| 10005 | 6 | NEW_SIGS | Turns on and off new signature format for Dash-specific messages
-| 10007 | 8 | MASTERNODE_PAYMENT_ENFORCEMENT | Requires masternodes to be paid by miners when blocks are processed
-| 10008 | 9 | SUPERBLOCKS_ENABLED | Superblocks are enabled (the 10% comes to fund the dash treasury)
-| 10009 | 10 | MASTERNODE_PAY_UPDATED_NODES | Only current protocol version masternode's will be paid (not older nodes)
+| 10004 | 5 | INSTANTSEND_MAX_VALUE | Controls the max value for an InstantSend transaction (currently 2000 maza)
+| 10005 | 6 | NEW_SIGS | Turns on and off new signature format for Maza-specific messages
+| 10007 | 8 | MAZANODE_PAYMENT_ENFORCEMENT | Requires mazanodes to be paid by miners when blocks are processed
+| 10008 | 9 | SUPERBLOCKS_ENABLED | Superblocks are enabled (the 10% comes to fund the maza treasury)
+| 10009 | 10 | MAZANODE_PAY_UPDATED_NODES | Only current protocol version mazanode's will be paid (not older nodes)
 | 10011 | 12 | RECONSIDER_BLOCKS | |
 | 10012 | 13 | OLD_SUPERBLOCK_FLAG | |
-| 10013 | 14 | REQUIRE_SENTINEL_FLAG | Only masternode's running sentinel will be paid 
+| 10013 | 14 | REQUIRE_SENTINEL_FLAG | Only mazanode's running sentinel will be paid 
 
 ## Undocumented messages
 
-### MASTERNODEPAYMENTBLOCK - "mnwb"
+### MAZANODEPAYMENTBLOCK - "mnwb"
 
-Masternode Payment Block
+Mazanode Payment Block
 
 *NOTE: Per src/protocol.cpp, there is no message for this (only inventory)*
 
 ### MNVERIFY - "mnv"
 
-Masternode Verify
+Mazanode Verify
 
 | Field Size | Field Name | Data type | Description |
 | ---------- | ----------- | --------- | ---------- |
-| 36 | masternodeOutpoint1 | [COutPoint](#coutpoint) | The unspent output which is holding 1000 DASH for masternode 1
-| 36 | masternodeOutpoint2 | [COutPoint](#coutpoint) | The unspent output which is holding 1000 DASH for masternode 2
-| # | addr | [CService](#cservice) | IPv4 address / port of the masternode
+| 36 | mazanodeOutpoint1 | [COutPoint](#coutpoint) | The unspent output which is holding 1000 MAZA for mazanode 1
+| 36 | mazanodeOutpoint2 | [COutPoint](#coutpoint) | The unspent output which is holding 1000 MAZA for mazanode 2
+| # | addr | [CService](#cservice) | IPv4 address / port of the mazanode
 | 4 | nonce | int | Nonce
 | 4 | nBlockHeight | int | The blockheight
-| 66* | vchSig1 | char[] | Signature of by masternode 1 (unclear if 66 is the correct size, but this is what it appears to be in most cases)
-| 66* | vchSig2 | char[] | Signature of by masternode 2 (unclear if 66 is the correct size, but this is what it appears to be in most cases)
+| 66* | vchSig1 | char[] | Signature of by mazanode 1 (unclear if 66 is the correct size, but this is what it appears to be in most cases)
+| 66* | vchSig2 | char[] | Signature of by mazanode 2 (unclear if 66 is the correct size, but this is what it appears to be in most cases)
 
 ### DSFINALTX - "dsf"
 
@@ -314,13 +314,13 @@ Governance Sync
 
 ### DSEG - "dseg"
 
-Masternode List/Entry Sync
+Mazanode List/Entry Sync
 
-Get Masternode list or specific entry
+Get Mazanode list or specific entry
 
 | Field Size | Field Name | Data type | Description |
 | ---------- | ----------- | --------- | ---------- |
-| 36 | masternodeOutpoint | [COutPoint](#coutpoint) | The unspent output which is holding 1000 DASH
+| 36 | mazanodeOutpoint | [COutPoint](#coutpoint) | The unspent output which is holding 1000 MAZA
 
 ### SYNCSTATUSCOUNT - "ssc"
 
@@ -328,22 +328,22 @@ Sync Status Count
 
 | Field Size | Field Name | Data type | Description |
 | ---------- | ----------- | --------- | ---------- |
-| 4 | nItemID | int | Masternode Sync Item ID
-| 4 | nCount | int | Masternode Sync Count
+| 4 | nItemID | int | Mazanode Sync Item ID
+| 4 | nCount | int | Mazanode Sync Count
 
-#### Defined Sync Item IDs (per src/masternode-sync.h)
+#### Defined Sync Item IDs (per src/mazanode-sync.h)
 
 | Item ID | Name | Description |
 | ---------- | ---------- | ----------- |
-| 2 | MASTERNODE_SYNC_LIST | |
-| 3 | MASTERNODE_SYNC_MNW | |
-| 4 | MASTERNODE_SYNC_GOVERNANCE | |
-| 10 | MASTERNODE_SYNC_GOVOBJ | |
-| 11 | MASTERNODE_SYNC_GOVOBJ_VOTE | |
+| 2 | MAZANODE_SYNC_LIST | |
+| 3 | MAZANODE_SYNC_MNW | |
+| 4 | MAZANODE_SYNC_GOVERNANCE | |
+| 10 | MAZANODE_SYNC_GOVOBJ | |
+| 11 | MAZANODE_SYNC_GOVOBJ_VOTE | |
 
-### MASTERNODEPAYMENTSYNC - "mnget"
+### MAZANODEPAYMENTSYNC - "mnget"
 
-Masternode Payment Sync
+Mazanode Payment Sync
 
 | Field Size | Field Name | Data type | Description |
 | ---------- | ----------- | --------- | ---------- |

@@ -1,11 +1,11 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2014-2017 The Maza Network developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include "config/dash-config.h"
+#include "config/maza-config.h"
 #endif
 
 #include "net.h"
@@ -25,8 +25,8 @@
 #include "utilstrencodings.h"
 
 #include "instantx.h"
-#include "masternode-sync.h"
-#include "masternodeman.h"
+#include "mazanode-sync.h"
+#include "mazanodeman.h"
 #include "privatesend.h"
 
 #ifdef WIN32
@@ -682,7 +682,7 @@ void CNode::copyStats(CNodeStats &stats)
         nPingUsecWait = GetTimeMicros() - nPingUsecStart;
     }
 
-    // Raw ping time is in microseconds, but show it to user as whole seconds (Dash users should be well used to small numbers with many decimal places by now :)
+    // Raw ping time is in microseconds, but show it to user as whole seconds (Maza users should be well used to small numbers with many decimal places by now :)
     stats.dPingTime = (((double)nPingUsecTime) / 1e6);
     stats.dMinPing  = (((double)nMinPingUsecTime) / 1e6);
     stats.dPingWait = (((double)nPingUsecWait) / 1e6);
@@ -1102,8 +1102,8 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     }
 
     // don't accept incoming connections until fully synced
-    if(fMasternodeMode && !masternodeSync.IsSynced()) {
-        LogPrintf("AcceptConnection -- masternode is not synced yet, skipping inbound connection attempt\n");
+    if(fMazanodeMode && !mazanodeSync.IsSynced()) {
+        LogPrintf("AcceptConnection -- mazanode is not synced yet, skipping inbound connection attempt\n");
         CloseSocket(hSocket);
         return;
     }
@@ -1140,15 +1140,15 @@ void CConnman::ThreadSocketHandler()
             {
                 if (pnode->fDisconnect)
                 {
-                    LogPrintf("ThreadSocketHandler -- removing node: peer=%d addr=%s nRefCount=%d fInbound=%d fMasternode=%d\n",
-                              pnode->id, pnode->addr.ToString(), pnode->GetRefCount(), pnode->fInbound, pnode->fMasternode);
+                    LogPrintf("ThreadSocketHandler -- removing node: peer=%d addr=%s nRefCount=%d fInbound=%d fMazanode=%d\n",
+                              pnode->id, pnode->addr.ToString(), pnode->GetRefCount(), pnode->fInbound, pnode->fMazanode);
 
                     // remove from vNodes
                     vNodes.erase(remove(vNodes.begin(), vNodes.end(), pnode), vNodes.end());
 
                     // release outbound grant (if any)
                     pnode->grantOutbound.Release();
-                    pnode->grantMasternodeOutbound.Release();
+                    pnode->grantMazanodeOutbound.Release();
 
                     // close socket and cleanup
                     pnode->CloseSocketDisconnect();
@@ -1480,7 +1480,7 @@ void ThreadMapPort()
             }
         }
 
-        std::string strDesc = "Dash " + FormatFullVersion();
+        std::string strDesc = "Maza " + FormatFullVersion();
 
         try {
             while (true) {
@@ -1741,7 +1741,7 @@ void CConnman::ThreadOpenConnections()
         if (!Params().AllowMultipleAddressesFromGroup()) {
             LOCK(cs_vNodes);
             BOOST_FOREACH(CNode* pnode, vNodes) {
-                if (!pnode->fInbound && !pnode->fAddnode && !pnode->fMasternode) {
+                if (!pnode->fInbound && !pnode->fAddnode && !pnode->fMazanode) {
 
                     // Count the peers that have all relevant services
                     if (pnode->fSuccessfullyConnected && !pnode->fFeeler && ((pnode->nServices & nRelevantServices) == nRelevantServices)) {
@@ -1942,9 +1942,9 @@ void CConnman::ThreadOpenAddedConnections()
     }
 }
 
-void CConnman::ThreadOpenMasternodeConnections()
+void CConnman::ThreadOpenMazanodeConnections()
 {
-    // Connecting to specific addresses, no masternode connections available
+    // Connecting to specific addresses, no mazanode connections available
     if (IsArgSet("-connect") && mapMultiArgs.at("-connect").size() > 0)
         return;
 
@@ -1953,39 +1953,39 @@ void CConnman::ThreadOpenMasternodeConnections()
         if (!interruptNet.sleep_for(std::chrono::milliseconds(1000)))
             return;
 
-        CSemaphoreGrant grant(*semMasternodeOutbound);
+        CSemaphoreGrant grant(*semMazanodeOutbound);
         if (interruptNet)
             return;
 
-        // NOTE: Process only one pending masternode at a time
+        // NOTE: Process only one pending mazanode at a time
 
-        LOCK(cs_vPendingMasternodes);
-        if (vPendingMasternodes.empty()) {
+        LOCK(cs_vPendingMazanodes);
+        if (vPendingMazanodes.empty()) {
             // nothing to do, keep waiting
             continue;
         }
 
-        const CService addr = vPendingMasternodes.front();
-        vPendingMasternodes.erase(vPendingMasternodes.begin());
-        if (IsMasternodeOrDisconnectRequested(addr)) {
+        const CService addr = vPendingMazanodes.front();
+        vPendingMazanodes.erase(vPendingMazanodes.begin());
+        if (IsMazanodeOrDisconnectRequested(addr)) {
             // nothing to do, try the next one
             continue;
         }
 
-        OpenMasternodeConnection(CAddress(addr, NODE_NETWORK));
+        OpenMazanodeConnection(CAddress(addr, NODE_NETWORK));
         // should be in the list now if connection was opened
         ForNode(addr, CConnman::AllNodes, [&](CNode* pnode) {
             if (pnode->fDisconnect) {
                 return false;
             }
-            grant.MoveTo(pnode->grantMasternodeOutbound);
+            grant.MoveTo(pnode->grantMazanodeOutbound);
             return true;
         });
     }
 }
 
 // if successful, this moves the passed grant to the constructed node
-bool CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound, const char *pszDest, bool fOneShot, bool fFeeler, bool fAddnode, bool fConnectToMasternode)
+bool CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound, const char *pszDest, bool fOneShot, bool fFeeler, bool fAddnode, bool fConnectToMazanode)
 {
     //
     // Initiate outbound network connection
@@ -2023,8 +2023,8 @@ bool CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
         pnode->fFeeler = true;
     if (fAddnode)
         pnode->fAddnode = true;
-    if (fConnectToMasternode)
-        pnode->fMasternode = true;
+    if (fConnectToMazanode)
+        pnode->fMazanode = true;
 
     GetNodeSignals().InitializeNode(pnode, *this);
     {
@@ -2035,7 +2035,7 @@ bool CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     return true;
 }
 
-bool CConnman::OpenMasternodeConnection(const CAddress &addrConnect) {
+bool CConnman::OpenMazanodeConnection(const CAddress &addrConnect) {
     return OpenNetworkConnection(addrConnect, false, NULL, NULL, false, false, false, true);
 }
 
@@ -2264,7 +2264,7 @@ CConnman::CConnman(uint64_t nSeed0In, uint64_t nSeed1In) :
     nReceiveFloodSize = 0;
     semOutbound = NULL;
     semAddnode = NULL;
-    semMasternodeOutbound = NULL;
+    semMazanodeOutbound = NULL;
     nMaxConnections = 0;
     nMaxOutbound = 0;
     nMaxAddnode = 0;
@@ -2347,9 +2347,9 @@ bool CConnman::Start(CScheduler& scheduler, std::string& strNodeError, Options c
         semAddnode = new CSemaphore(nMaxAddnode);
     }
 
-    if (semMasternodeOutbound == NULL) {
+    if (semMazanodeOutbound == NULL) {
         // initialize semaphore
-        semMasternodeOutbound = new CSemaphore(MAX_OUTBOUND_MASTERNODE_CONNECTIONS);
+        semMazanodeOutbound = new CSemaphore(MAX_OUTBOUND_MAZANODE_CONNECTIONS);
     }
 
     //
@@ -2379,8 +2379,8 @@ bool CConnman::Start(CScheduler& scheduler, std::string& strNodeError, Options c
     if (!mapMultiArgs.count("-connect") || mapMultiArgs.at("-connect").size() != 1 || mapMultiArgs.at("-connect")[0] != "0")
         threadOpenConnections = std::thread(&TraceThread<std::function<void()> >, "opencon", std::function<void()>(std::bind(&CConnman::ThreadOpenConnections, this)));
 
-    // Initiate masternode connections
-    threadOpenMasternodeConnections = std::thread(&TraceThread<std::function<void()> >, "mncon", std::function<void()>(std::bind(&CConnman::ThreadOpenMasternodeConnections, this)));
+    // Initiate mazanode connections
+    threadOpenMazanodeConnections = std::thread(&TraceThread<std::function<void()> >, "mncon", std::function<void()>(std::bind(&CConnman::ThreadOpenMazanodeConnections, this)));
 
     // Process messages
     threadMessageHandler = std::thread(&TraceThread<std::function<void()> >, "msghand", std::function<void()>(std::bind(&CConnman::ThreadMessageHandler, this)));
@@ -2437,9 +2437,9 @@ void CConnman::Interrupt()
         }
     }
 
-    if (semMasternodeOutbound) {
-        for (int i=0; i<MAX_OUTBOUND_MASTERNODE_CONNECTIONS; i++) {
-            semMasternodeOutbound->post();
+    if (semMazanodeOutbound) {
+        for (int i=0; i<MAX_OUTBOUND_MAZANODE_CONNECTIONS; i++) {
+            semMazanodeOutbound->post();
         }
     }
 }
@@ -2448,8 +2448,8 @@ void CConnman::Stop()
 {
     if (threadMessageHandler.joinable())
         threadMessageHandler.join();
-    if (threadOpenMasternodeConnections.joinable())
-        threadOpenMasternodeConnections.join();
+    if (threadOpenMazanodeConnections.joinable())
+        threadOpenMazanodeConnections.join();
     if (threadOpenConnections.joinable())
         threadOpenConnections.join();
     if (threadOpenAddedConnections.joinable())
@@ -2487,8 +2487,8 @@ void CConnman::Stop()
     semOutbound = NULL;
     delete semAddnode;
     semAddnode = NULL;
-    delete semMasternodeOutbound;
-    semMasternodeOutbound = NULL;
+    delete semMazanodeOutbound;
+    semMazanodeOutbound = NULL;
 }
 
 void CConnman::DeleteNode(CNode* pnode)
@@ -2561,15 +2561,15 @@ bool CConnman::RemoveAddedNode(const std::string& strNode)
     return false;
 }
 
-bool CConnman::AddPendingMasternode(const CService& service)
+bool CConnman::AddPendingMazanode(const CService& service)
 {
-    LOCK(cs_vPendingMasternodes);
-    for(std::vector<CService>::const_iterator it = vPendingMasternodes.begin(); it != vPendingMasternodes.end(); ++it) {
+    LOCK(cs_vPendingMazanodes);
+    for(std::vector<CService>::const_iterator it = vPendingMazanodes.begin(); it != vPendingMazanodes.end(); ++it) {
         if (service == *it)
             return false;
     }
 
-    vPendingMasternodes.push_back(service);
+    vPendingMazanodes.push_back(service);
     return true;
 }
 
@@ -2821,7 +2821,7 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
     nPingUsecStart = 0;
     nPingUsecTime = 0;
     fPingQueued = false;
-    fMasternode = false;
+    fMazanode = false;
     nMinPingUsecTime = std::numeric_limits<int64_t>::max();
     fPauseRecv = false;
     fPauseSend = false;
@@ -2959,9 +2959,9 @@ bool CConnman::ForNode(NodeId id, std::function<bool(const CNode* pnode)> cond, 
     return found != nullptr && cond(found) && func(found);
 }
 
-bool CConnman::IsMasternodeOrDisconnectRequested(const CService& addr) {
+bool CConnman::IsMazanodeOrDisconnectRequested(const CService& addr) {
     return ForNode(addr, AllNodes, [](CNode* pnode){
-        return pnode->fMasternode || pnode->fDisconnect;
+        return pnode->fMazanode || pnode->fDisconnect;
     });
 }
 

@@ -3,7 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #
-# Generate seeds.txt from masternode list
+# Generate seeds.txt from mazanode list
 #
 
 NSEEDS=512

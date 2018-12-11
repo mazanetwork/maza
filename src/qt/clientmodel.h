@@ -1,5 +1,5 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2014-2017 The Maza Network developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -38,7 +38,7 @@ enum NumConnections {
     CONNECTIONS_ALL  = (CONNECTIONS_IN | CONNECTIONS_OUT),
 };
 
-/** Model for Dash network client. */
+/** Model for Maza network client. */
 class ClientModel : public QObject
 {
     Q_OBJECT
@@ -53,7 +53,7 @@ public:
 
     //! Return number of connections, default is in- and outbound (total)
     int getNumConnections(unsigned int flags = CONNECTIONS_ALL) const;
-    QString getMasternodeCountString() const;
+    QString getMazanodeCountString() const;
     int getNumBlocks() const;
     int getHeaderTipHeight() const;
     int64_t getHeaderTipTime() const;
@@ -92,7 +92,7 @@ public:
 private:
     OptionsModel *optionsModel;
     PeerTableModel *peerTableModel;
-    QString cachedMasternodeCountString;
+    QString cachedMazanodeCountString;
     BanTableModel *banTableModel;
 
     QTimer *pollTimer;
@@ -103,7 +103,7 @@ private:
 
 Q_SIGNALS:
     void numConnectionsChanged(int count);
-    void strMasternodesChanged(const QString &strMasternodes);
+    void strMazanodesChanged(const QString &strMazanodes);
     void numBlocksChanged(int count, const QDateTime& blockDate, double nVerificationProgress, bool header);
     void additionalDataSyncProgressChanged(double nSyncProgress);
     void mempoolSizeChanged(long count, size_t mempoolSizeInBytes);

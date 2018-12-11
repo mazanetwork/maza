@@ -1,16 +1,16 @@
-// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2014-2017 The Maza Network developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #include "privatesend.h"
 
-#include "activemasternode.h"
+#include "activemazanode.h"
 #include "consensus/validation.h"
 #include "governance.h"
 #include "init.h"
 #include "instantx.h"
-#include "masternode-payments.h"
-#include "masternode-sync.h"
-#include "masternodeman.h"
+#include "mazanode-payments.h"
+#include "mazanode-sync.h"
+#include "mazanodeman.h"
 #include "messagesigner.h"
 #include "netfulfilledman.h"
 #include "netmessagemaker.h"
@@ -44,34 +44,34 @@ uint256 CDarksendQueue::GetSignatureHash() const
 
 bool CDarksendQueue::Sign()
 {
-    if(!fMasternodeMode) return false;
+    if(!fMazanodeMode) return false;
 
     std::string strError = "";
 
     if (sporkManager.IsSporkActive(SPORK_6_NEW_SIGS)) {
         uint256 hash = GetSignatureHash();
 
-        if (!CHashSigner::SignHash(hash, activeMasternode.keyMasternode, vchSig)) {
+        if (!CHashSigner::SignHash(hash, activeMazanode.keyMazanode, vchSig)) {
             LogPrintf("CDarksendQueue::Sign -- SignHash() failed\n");
             return false;
         }
 
-        if (!CHashSigner::VerifyHash(hash, activeMasternode.pubKeyMasternode, vchSig, strError)) {
+        if (!CHashSigner::VerifyHash(hash, activeMazanode.pubKeyMazanode, vchSig, strError)) {
             LogPrintf("CDarksendQueue::Sign -- VerifyHash() failed, error: %s\n", strError);
             return false;
         }
     } else {
-        std::string strMessage = CTxIn(masternodeOutpoint).ToString() +
+        std::string strMessage = CTxIn(mazanodeOutpoint).ToString() +
                         boost::lexical_cast<std::string>(nDenom) +
                         boost::lexical_cast<std::string>(nTime) +
                         boost::lexical_cast<std::string>(fReady);
 
-        if(!CMessageSigner::SignMessage(strMessage, vchSig, activeMasternode.keyMasternode)) {
+        if(!CMessageSigner::SignMessage(strMessage, vchSig, activeMazanode.keyMazanode)) {
             LogPrintf("CDarksendQueue::Sign -- SignMessage() failed, %s\n", ToString());
             return false;
         }
 
-        if(!CMessageSigner::VerifyMessage(activeMasternode.pubKeyMasternode, vchSig, strMessage, strError)) {
+        if(!CMessageSigner::VerifyMessage(activeMazanode.pubKeyMazanode, vchSig, strMessage, strError)) {
             LogPrintf("CDarksendQueue::Sign -- VerifyMessage() failed, error: %s\n", strError);
             return false;
         }
@@ -80,26 +80,26 @@ bool CDarksendQueue::Sign()
     return true;
 }
 
-bool CDarksendQueue::CheckSignature(const CPubKey& pubKeyMasternode) const
+bool CDarksendQueue::CheckSignature(const CPubKey& pubKeyMazanode) const
 {
     std::string strError = "";
 
     if (sporkManager.IsSporkActive(SPORK_6_NEW_SIGS)) {
         uint256 hash = GetSignatureHash();
 
-        if (!CHashSigner::VerifyHash(hash, pubKeyMasternode, vchSig, strError)) {
+        if (!CHashSigner::VerifyHash(hash, pubKeyMazanode, vchSig, strError)) {
             // we don't care about queues with old signature format
             LogPrintf("CDarksendQueue::CheckSignature -- VerifyHash() failed, error: %s\n", strError);
             return false;
         }
     } else {
-        std::string strMessage = CTxIn(masternodeOutpoint).ToString() +
+        std::string strMessage = CTxIn(mazanodeOutpoint).ToString() +
                         boost::lexical_cast<std::string>(nDenom) +
                         boost::lexical_cast<std::string>(nTime) +
                         boost::lexical_cast<std::string>(fReady);
 
-        if(!CMessageSigner::VerifyMessage(pubKeyMasternode, vchSig, strMessage, strError)) {
-            LogPrintf("CDarksendQueue::CheckSignature -- Got bad Masternode queue signature: %s; error: %s\n", ToString(), strError);
+        if(!CMessageSigner::VerifyMessage(pubKeyMazanode, vchSig, strMessage, strError)) {
+            LogPrintf("CDarksendQueue::CheckSignature -- Got bad Mazanode queue signature: %s; error: %s\n", ToString(), strError);
             return false;
         }
     }
@@ -124,31 +124,31 @@ uint256 CDarksendBroadcastTx::GetSignatureHash() const
 
 bool CDarksendBroadcastTx::Sign()
 {
-    if(!fMasternodeMode) return false;
+    if(!fMazanodeMode) return false;
 
     std::string strError = "";
 
     if (sporkManager.IsSporkActive(SPORK_6_NEW_SIGS)) {
         uint256 hash = GetSignatureHash();
 
-        if (!CHashSigner::SignHash(hash, activeMasternode.keyMasternode, vchSig)) {
+        if (!CHashSigner::SignHash(hash, activeMazanode.keyMazanode, vchSig)) {
             LogPrintf("CDarksendBroadcastTx::Sign -- SignHash() failed\n");
             return false;
         }
 
-        if (!CHashSigner::VerifyHash(hash, activeMasternode.pubKeyMasternode, vchSig, strError)) {
+        if (!CHashSigner::VerifyHash(hash, activeMazanode.pubKeyMazanode, vchSig, strError)) {
             LogPrintf("CDarksendBroadcastTx::Sign -- VerifyHash() failed, error: %s\n", strError);
             return false;
         }
     } else {
         std::string strMessage = tx->GetHash().ToString() + boost::lexical_cast<std::string>(sigTime);
 
-        if(!CMessageSigner::SignMessage(strMessage, vchSig, activeMasternode.keyMasternode)) {
+        if(!CMessageSigner::SignMessage(strMessage, vchSig, activeMazanode.keyMazanode)) {
             LogPrintf("CDarksendBroadcastTx::Sign -- SignMessage() failed\n");
             return false;
         }
 
-        if(!CMessageSigner::VerifyMessage(activeMasternode.pubKeyMasternode, vchSig, strMessage, strError)) {
+        if(!CMessageSigner::VerifyMessage(activeMazanode.pubKeyMazanode, vchSig, strMessage, strError)) {
             LogPrintf("CDarksendBroadcastTx::Sign -- VerifyMessage() failed, error: %s\n", strError);
             return false;
         }
@@ -157,14 +157,14 @@ bool CDarksendBroadcastTx::Sign()
     return true;
 }
 
-bool CDarksendBroadcastTx::CheckSignature(const CPubKey& pubKeyMasternode) const
+bool CDarksendBroadcastTx::CheckSignature(const CPubKey& pubKeyMazanode) const
 {
     std::string strError = "";
 
     if (sporkManager.IsSporkActive(SPORK_6_NEW_SIGS)) {
         uint256 hash = GetSignatureHash();
 
-        if (!CHashSigner::VerifyHash(hash, pubKeyMasternode, vchSig, strError)) {
+        if (!CHashSigner::VerifyHash(hash, pubKeyMazanode, vchSig, strError)) {
             // we don't care about dstxes with old signature format
             LogPrintf("CDarksendBroadcastTx::CheckSignature -- VerifyHash() failed, error: %s\n", strError);
             return false;
@@ -172,7 +172,7 @@ bool CDarksendBroadcastTx::CheckSignature(const CPubKey& pubKeyMasternode) const
     } else {
         std::string strMessage = tx->GetHash().ToString() + boost::lexical_cast<std::string>(sigTime);
 
-        if(!CMessageSigner::VerifyMessage(pubKeyMasternode, vchSig, strMessage, strError)) {
+        if(!CMessageSigner::VerifyMessage(pubKeyMazanode, vchSig, strMessage, strError)) {
             LogPrintf("CDarksendBroadcastTx::CheckSignature -- Got bad dstx signature, error: %s\n", strError);
             return false;
         }
@@ -269,7 +269,7 @@ bool CPrivateSend::IsCollateralValid(const CTransaction& txCollateral)
     for (const auto& txout : txCollateral.vout) {
         nValueOut += txout.nValue;
 
-        bool fAllowData = mnpayments.GetMinMasternodePaymentsProto() > 70208;
+        bool fAllowData = mnpayments.GetMinMazanodePaymentsProto() > 70208;
         if(!txout.scriptPubKey.IsPayToPublicKeyHash() && !(fAllowData && txout.scriptPubKey.IsUnspendable())) {
             LogPrintf ("CPrivateSend::IsCollateralValid -- Invalid Script, txCollateral=%s", txCollateral.ToString());
             return false;
@@ -307,7 +307,7 @@ bool CPrivateSend::IsCollateralValid(const CTransaction& txCollateral)
 
 bool CPrivateSend::IsCollateralAmount(CAmount nInputAmount)
 {
-    if (mnpayments.GetMinMasternodePaymentsProto() > 70208) {
+    if (mnpayments.GetMinMazanodePaymentsProto() > 70208) {
         // collateral input can be anything between 1x and "max" (including both)
         return (nInputAmount >= GetCollateralAmount() && nInputAmount <= GetMaxCollateralAmount());
     } else { // <= 70208
@@ -392,10 +392,10 @@ int CPrivateSend::GetDenominations(const std::vector<CTxOut>& vecTxOut, bool fSi
 bool CPrivateSend::GetDenominationsBits(int nDenom, std::vector<int> &vecBitsRet)
 {
     // ( bit on if present, 4 denominations example )
-    // bit 0 - 100DASH+1
-    // bit 1 - 10DASH+1
-    // bit 2 - 1DASH+1
-    // bit 3 - .1DASH+1
+    // bit 0 - 100MAZA+1
+    // bit 1 - 10MAZA+1
+    // bit 2 - 1MAZA+1
+    // bit 3 - .1MAZA+1
 
     int nMaxDenoms = vecStandardDenominations.size();
 
@@ -446,11 +446,11 @@ std::string CPrivateSend::GetMessageByID(PoolMessage nMessageID)
         case ERR_INVALID_SCRIPT:        return _("Invalid script detected.");
         case ERR_INVALID_TX:            return _("Transaction not valid.");
         case ERR_MAXIMUM:               return _("Entry exceeds maximum size.");
-        case ERR_MN_LIST:               return _("Not in the Masternode list.");
+        case ERR_MN_LIST:               return _("Not in the Mazanode list.");
         case ERR_MODE:                  return _("Incompatible mode.");
         case ERR_NON_STANDARD_PUBKEY:   return _("Non-standard public key detected.");
-        case ERR_NOT_A_MN:              return _("This is not a Masternode."); // not used
-        case ERR_QUEUE_FULL:            return _("Masternode queue is full.");
+        case ERR_NOT_A_MN:              return _("This is not a Mazanode."); // not used
+        case ERR_QUEUE_FULL:            return _("Mazanode queue is full.");
         case ERR_RECENT:                return _("Last PrivateSend was too recent.");
         case ERR_SESSION:               return _("Session not complete!");
         case ERR_MISSING_TX:            return _("Missing input transaction information.");
@@ -492,7 +492,7 @@ void CPrivateSend::CheckDSTXes(int nHeight)
 
 void CPrivateSend::UpdatedBlockTip(const CBlockIndex *pindex)
 {
-    if(pindex && !fLiteMode && masternodeSync.IsMasternodeListSynced()) {
+    if(pindex && !fLiteMode && mazanodeSync.IsMazanodeListSynced()) {
         CheckDSTXes(pindex->nHeight);
     }
 }
@@ -514,14 +514,14 @@ void CPrivateSend::SyncTransaction(const CTransaction& tx, const CBlockIndex *pi
 //TODO: Rename/move to core
 void ThreadCheckPrivateSend(CConnman& connman)
 {
-    if(fLiteMode) return; // disable all Dash specific functionality
+    if(fLiteMode) return; // disable all Maza specific functionality
 
     static bool fOneThread;
     if(fOneThread) return;
     fOneThread = true;
 
     // Make this thread recognisable as the PrivateSend thread
-    RenameThread("dash-ps");
+    RenameThread("maza-ps");
 
     unsigned int nTick = 0;
 
@@ -530,13 +530,13 @@ void ThreadCheckPrivateSend(CConnman& connman)
         MilliSleep(1000);
 
         // try to sync from all available nodes, one step at a time
-        masternodeSync.ProcessTick(connman);
+        mazanodeSync.ProcessTick(connman);
 
-        if(masternodeSync.IsBlockchainSynced() && !ShutdownRequested()) {
+        if(mazanodeSync.IsBlockchainSynced() && !ShutdownRequested()) {
 
             nTick++;
 
-            // make sure to check all masternodes first
+            // make sure to check all mazanodes first
             mnodeman.Check();
 
             mnodeman.ProcessPendingMnbRequests(connman);
@@ -544,18 +544,18 @@ void ThreadCheckPrivateSend(CConnman& connman)
 
             // check if we should activate or ping every few minutes,
             // slightly postpone first run to give net thread a chance to connect to some peers
-            if(nTick % MASTERNODE_MIN_MNP_SECONDS == 15)
-                activeMasternode.ManageState(connman);
+            if(nTick % MAZANODE_MIN_MNP_SECONDS == 15)
+                activeMazanode.ManageState(connman);
 
             if(nTick % 60 == 0) {
                 netfulfilledman.CheckAndRemove();
-                mnodeman.ProcessMasternodeConnections(connman);
+                mnodeman.ProcessMazanodeConnections(connman);
                 mnodeman.CheckAndRemove(connman);
-                mnodeman.WarnMasternodeDaemonUpdates();
+                mnodeman.WarnMazanodeDaemonUpdates();
                 mnpayments.CheckAndRemove();
                 instantsend.CheckAndRemove();
             }
-            if(fMasternodeMode && (nTick % (60 * 5) == 0)) {
+            if(fMazanodeMode && (nTick % (60 * 5) == 0)) {
                 mnodeman.DoFullVerificationStep(connman);
             }
 

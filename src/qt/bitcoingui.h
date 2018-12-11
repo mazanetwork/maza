@@ -6,7 +6,7 @@
 #define BITCOIN_QT_BITCOINGUI_H
 
 #if defined(HAVE_CONFIG_H)
-#include "config/dash-config.h"
+#include "config/maza-config.h"
 #endif
 
 #include "amount.h"
@@ -31,7 +31,7 @@ class WalletFrame;
 class WalletModel;
 class HelpMessageDialog;
 class ModalOverlay;
-class MasternodeList;
+class MazanodeList;
 
 class CWallet;
 
@@ -96,7 +96,7 @@ private:
     QMenuBar *appMenuBar;
     QAction *overviewAction;
     QAction *historyAction;
-    QAction *masternodeAction;
+    QAction *mazanodeAction;
     QAction *quitAction;
     QAction *sendCoinsAction;
     QAction *sendCoinsMenuAction;
@@ -217,8 +217,8 @@ private Q_SLOTS:
     void gotoOverviewPage();
     /** Switch to history (transactions) page */
     void gotoHistoryPage();
-    /** Switch to masternode page */
-    void gotoMasternodePage();
+    /** Switch to mazanode page */
+    void gotoMazanodePage();
     /** Switch to receive coins page */
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */
@@ -246,9 +246,9 @@ private Q_SLOTS:
     void showPeers();
     void showRepair();
 
-    /** Open external (default) editor with dash.conf */
+    /** Open external (default) editor with maza.conf */
     void showConfEditor();
-    /** Open external (default) editor with masternode.conf */
+    /** Open external (default) editor with mazanode.conf */
     void showMNConfEditor();
     /** Show folder with wallet backups in default file browser */
     void showBackups();

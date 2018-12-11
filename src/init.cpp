@@ -1,11 +1,11 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2014-2017 The Maza Network developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #if defined(HAVE_CONFIG_H)
-#include "config/dash-config.h"
+#include "config/maza-config.h"
 #endif
 
 #include "init.h"
@@ -45,7 +45,7 @@
 #include "wallet/wallet.h"
 #endif
 
-#include "activemasternode.h"
+#include "activemazanode.h"
 #include "dsnotificationinterface.h"
 #include "flat-database.h"
 #include "governance.h"
@@ -53,10 +53,10 @@
 #ifdef ENABLE_WALLET
 #include "keepass.h"
 #endif
-#include "masternode-payments.h"
-#include "masternode-sync.h"
-#include "masternodeman.h"
-#include "masternodeconfig.h"
+#include "mazanode-payments.h"
+#include "mazanode-sync.h"
+#include "mazanodeman.h"
+#include "mazanodeconfig.h"
 #include "messagesigner.h"
 #include "netfulfilledman.h"
 #ifdef ENABLE_WALLET
@@ -226,7 +226,7 @@ void PrepareShutdown()
     /// for example if the data directory was found to be locked.
     /// Be sure that anything that writes files or flushes caches only does this if the respective
     /// module was initialized.
-    RenameThread("dash-shutoff");
+    RenameThread("maza-shutoff");
     mempool.AddTransactionsUpdated(1);
     StopHTTPRPC();
     StopREST();
@@ -243,9 +243,9 @@ void PrepareShutdown()
 
     // STORE DATA CACHES INTO SERIALIZED DAT FILES
     if (!fLiteMode) {
-        CFlatDB<CMasternodeMan> flatdb1("mncache.dat", "magicMasternodeCache");
+        CFlatDB<CMazanodeMan> flatdb1("mncache.dat", "magicMazanodeCache");
         flatdb1.Dump(mnodeman);
-        CFlatDB<CMasternodePayments> flatdb2("mnpayments.dat", "magicMasternodePaymentsCache");
+        CFlatDB<CMazanodePayments> flatdb2("mnpayments.dat", "magicMazanodePaymentsCache");
         flatdb2.Dump(mnpayments);
         CFlatDB<CGovernanceManager> flatdb3("governance.dat", "magicGovernanceCache");
         flatdb3.Dump(governance);
@@ -511,7 +511,7 @@ std::string HelpMessage(HelpMessageMode mode)
         strUsage += HelpMessageOpt("-bip9params=deployment:start:end", "Use given start/end times for specified BIP9 deployment (regtest-only)");
     }
     std::string debugCategories = "addrman, alert, bench, cmpctblock, coindb, db, http, leveldb, libevent, lock, mempool, mempoolrej, net, proxy, prune, rand, reindex, rpc, selectcoins, tor, zmq, "
-                                  "dash (or specifically: gobject, instantsend, keepass, masternode, mnpayments, mnsync, privatesend, spork)"; // Don't translate these and qt below
+                                  "maza (or specifically: gobject, instantsend, keepass, mazanode, mnpayments, mnsync, privatesend, spork)"; // Don't translate these and qt below
     if (mode == HMM_BITCOIN_QT)
         debugCategories += ", qt";
     strUsage += HelpMessageOpt("-debug=<category>", strprintf(_("Output debugging information (default: %u, supplying <category> is optional)"), 0) + ". " +
@@ -543,21 +543,21 @@ std::string HelpMessage(HelpMessageMode mode)
     }
     strUsage += HelpMessageOpt("-shrinkdebugfile", _("Shrink debug.log file on client startup (default: 1 when no -debug)"));
     AppendParamsHelpMessages(strUsage, showDebug);
-    strUsage += HelpMessageOpt("-litemode=<n>", strprintf(_("Disable all Dash specific functionality (Masternodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)"), 0));
+    strUsage += HelpMessageOpt("-litemode=<n>", strprintf(_("Disable all Maza specific functionality (Mazanodes, PrivateSend, InstantSend, Governance) (0-1, default: %u)"), 0));
     strUsage += HelpMessageOpt("-sporkaddr=<hex>", strprintf(_("Override spork address. Only useful for regtest and devnet. Using this on mainnet or testnet will ban you.")));
 
-    strUsage += HelpMessageGroup(_("Masternode options:"));
-    strUsage += HelpMessageOpt("-masternode=<n>", strprintf(_("Enable the client to act as a masternode (0-1, default: %u)"), 0));
-    strUsage += HelpMessageOpt("-mnconf=<file>", strprintf(_("Specify masternode configuration file (default: %s)"), "masternode.conf"));
-    strUsage += HelpMessageOpt("-mnconflock=<n>", strprintf(_("Lock masternodes from masternode configuration file (default: %u)"), 1));
-    strUsage += HelpMessageOpt("-masternodeprivkey=<n>", _("Set the masternode private key"));
+    strUsage += HelpMessageGroup(_("Mazanode options:"));
+    strUsage += HelpMessageOpt("-mazanode=<n>", strprintf(_("Enable the client to act as a mazanode (0-1, default: %u)"), 0));
+    strUsage += HelpMessageOpt("-mnconf=<file>", strprintf(_("Specify mazanode configuration file (default: %s)"), "mazanode.conf"));
+    strUsage += HelpMessageOpt("-mnconflock=<n>", strprintf(_("Lock mazanodes from mazanode configuration file (default: %u)"), 1));
+    strUsage += HelpMessageOpt("-mazanodeprivkey=<n>", _("Set the mazanode private key"));
 
 #ifdef ENABLE_WALLET
     strUsage += HelpMessageGroup(_("PrivateSend options:"));
     strUsage += HelpMessageOpt("-enableprivatesend=<n>", strprintf(_("Enable use of automated PrivateSend for funds stored in this wallet (0-1, default: %u)"), 0));
     strUsage += HelpMessageOpt("-privatesendmultisession=<n>", strprintf(_("Enable multiple PrivateSend mixing sessions per block, experimental (0-1, default: %u)"), DEFAULT_PRIVATESEND_MULTISESSION));
-    strUsage += HelpMessageOpt("-privatesendrounds=<n>", strprintf(_("Use N separate masternodes for each denominated input to mix funds (%u-%u, default: %u)"), MIN_PRIVATESEND_ROUNDS, MAX_PRIVATESEND_ROUNDS, DEFAULT_PRIVATESEND_ROUNDS));
-    strUsage += HelpMessageOpt("-privatesendamount=<n>", strprintf(_("Keep N DASH anonymized (%u-%u, default: %u)"), MIN_PRIVATESEND_AMOUNT, MAX_PRIVATESEND_AMOUNT, DEFAULT_PRIVATESEND_AMOUNT));
+    strUsage += HelpMessageOpt("-privatesendrounds=<n>", strprintf(_("Use N separate mazanodes for each denominated input to mix funds (%u-%u, default: %u)"), MIN_PRIVATESEND_ROUNDS, MAX_PRIVATESEND_ROUNDS, DEFAULT_PRIVATESEND_ROUNDS));
+    strUsage += HelpMessageOpt("-privatesendamount=<n>", strprintf(_("Keep N MAZA anonymized (%u-%u, default: %u)"), MIN_PRIVATESEND_AMOUNT, MAX_PRIVATESEND_AMOUNT, DEFAULT_PRIVATESEND_AMOUNT));
     strUsage += HelpMessageOpt("-liquidityprovider=<n>", strprintf(_("Provide liquidity to PrivateSend by infrequently mixing coins on a continual basis (%u-%u, default: %u, 1=very frequent, high fees, %u=very infrequent, low fees)"),
         MIN_PRIVATESEND_LIQUIDITY, MAX_PRIVATESEND_LIQUIDITY, DEFAULT_PRIVATESEND_LIQUIDITY, MAX_PRIVATESEND_LIQUIDITY));
 #endif // ENABLE_WALLET
@@ -607,8 +607,8 @@ std::string HelpMessage(HelpMessageMode mode)
 
 std::string LicenseInfo()
 {
-    const std::string URL_SOURCE_CODE = "<https://github.com/dashpay/dash>";
-    const std::string URL_WEBSITE = "<https://dashpay.org>";
+    const std::string URL_SOURCE_CODE = "<https://github.com/mazacoin/maza>";
+    const std::string URL_WEBSITE = "<https://mazacoin.org>";
 
     return CopyrightHolders(_("Copyright (C)"), 2014, COPYRIGHT_YEAR) + "\n" +
            "\n" +
@@ -711,7 +711,7 @@ void CleanupBlockRevFiles()
 void ThreadImport(std::vector<boost::filesystem::path> vImportFiles)
 {
     const CChainParams& chainparams = Params();
-    RenameThread("dash-loadblk");
+    RenameThread("maza-loadblk");
 
     {
     CImportingNow imp;
@@ -779,7 +779,7 @@ void ThreadImport(std::vector<boost::filesystem::path> vImportFiles)
 }
 
 /** Sanity checks
- *  Ensure that Dash Core is running in a usable environment with all
+ *  Ensure that Maza Network is running in a usable environment with all
  *  necessary library support.
  */
 bool InitSanityCheck(void)
@@ -826,14 +826,14 @@ void InitParameterInteraction()
             LogPrintf("%s: parameter interaction: -whitebind set -> setting -listen=1\n", __func__);
     }
 
-    if (GetBoolArg("-masternode", false)) {
-        // masternodes MUST accept connections from outside
+    if (GetBoolArg("-mazanode", false)) {
+        // mazanodes MUST accept connections from outside
         ForceSetArg("-listen", "1");
-        LogPrintf("%s: parameter interaction: -masternode=1 -> setting -listen=1\n", __func__);
+        LogPrintf("%s: parameter interaction: -mazanode=1 -> setting -listen=1\n", __func__);
         if (GetArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS) < DEFAULT_MAX_PEER_CONNECTIONS) {
-            // masternodes MUST be able to handle at least DEFAULT_MAX_PEER_CONNECTIONS connections
+            // mazanodes MUST be able to handle at least DEFAULT_MAX_PEER_CONNECTIONS connections
             ForceSetArg("-maxconnections", itostr(DEFAULT_MAX_PEER_CONNECTIONS));
-            LogPrintf("%s: parameter interaction: -masternode=1 -> setting -maxconnections=%d\n", __func__, DEFAULT_MAX_PEER_CONNECTIONS);
+            LogPrintf("%s: parameter interaction: -mazanode=1 -> setting -maxconnections=%d\n", __func__, DEFAULT_MAX_PEER_CONNECTIONS);
         }
     }
 
@@ -939,7 +939,7 @@ void InitLogging()
     fLogIPs = GetBoolArg("-logips", DEFAULT_LOGIPS);
 
     LogPrintf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-    LogPrintf("Dash Core version %s\n", FormatFullVersion());
+    LogPrintf("Maza Network version %s\n", FormatFullVersion());
 }
 
 namespace { // Variables internal to initialization process only
@@ -1273,7 +1273,7 @@ static bool LockDataDirectory(bool probeOnly)
 {
     std::string strDataDir = GetDataDir().string();
 
-    // Make sure only a single Dash process is using the data directory.
+    // Make sure only a single Maza process is using the data directory.
     boost::filesystem::path pathLockFile = GetDataDir() / ".lock";
     FILE* file = fopen(pathLockFile.string().c_str(), "a"); // empty lock file; created if it doesn't exist.
     if (file) fclose(file);
@@ -1791,48 +1791,48 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     }
 
     // ********************************************************* Step 11a: setup PrivateSend
-    fMasternodeMode = GetBoolArg("-masternode", false);
-    // TODO: masternode should have no wallet
+    fMazanodeMode = GetBoolArg("-mazanode", false);
+    // TODO: mazanode should have no wallet
 
-    //lite mode disables all Dash-specific functionality
+    //lite mode disables all Maza-specific functionality
     fLiteMode = GetBoolArg("-litemode", false);
 
     if(fLiteMode) {
-        InitWarning(_("You are starting in lite mode, all Dash-specific functionality is disabled."));
+        InitWarning(_("You are starting in lite mode, all Maza-specific functionality is disabled."));
     }
 
     if((!fLiteMode && fTxIndex == false)
-       && chainparams.NetworkIDString() != CBaseChainParams::REGTEST) { // TODO remove this when pruning is fixed. See https://github.com/dashpay/dash/pull/1817 and https://github.com/dashpay/dash/pull/1743
+       && chainparams.NetworkIDString() != CBaseChainParams::REGTEST) { // TODO remove this when pruning is fixed. See https://github.com/mazacoin/maza/pull/1817 and https://github.com/mazacoin/maza/pull/1743
         return InitError(_("Transaction index can't be disabled in full mode. Either start with -litemode command line switch or enable transaction index."));
     }
 
-    if(fLiteMode && fMasternodeMode) {
-        return InitError(_("You can not start a masternode in lite mode."));
+    if(fLiteMode && fMazanodeMode) {
+        return InitError(_("You can not start a mazanode in lite mode."));
     }
 
-    if(fMasternodeMode) {
-        LogPrintf("MASTERNODE:\n");
+    if(fMazanodeMode) {
+        LogPrintf("MAZANODE:\n");
 
-        std::string strMasterNodePrivKey = GetArg("-masternodeprivkey", "");
-        if(!strMasterNodePrivKey.empty()) {
-            if(!CMessageSigner::GetKeysFromSecret(strMasterNodePrivKey, activeMasternode.keyMasternode, activeMasternode.pubKeyMasternode))
-                return InitError(_("Invalid masternodeprivkey. Please see documenation."));
+        std::string strMazaNodePrivKey = GetArg("-mazanodeprivkey", "");
+        if(!strMazaNodePrivKey.empty()) {
+            if(!CMessageSigner::GetKeysFromSecret(strMazaNodePrivKey, activeMazanode.keyMazanode, activeMazanode.pubKeyMazanode))
+                return InitError(_("Invalid mazanodeprivkey. Please see documenation."));
 
-            LogPrintf("  pubKeyMasternode: %s\n", CBitcoinAddress(activeMasternode.pubKeyMasternode.GetID()).ToString());
+            LogPrintf("  pubKeyMazanode: %s\n", CBitcoinAddress(activeMazanode.pubKeyMazanode.GetID()).ToString());
         } else {
-            return InitError(_("You must specify a masternodeprivkey in the configuration. Please see documentation for help."));
+            return InitError(_("You must specify a mazanodeprivkey in the configuration. Please see documentation for help."));
         }
     }
 
 #ifdef ENABLE_WALLET
-    LogPrintf("Using masternode config file %s\n", GetMasternodeConfigFile().string());
+    LogPrintf("Using mazanode config file %s\n", GetMazanodeConfigFile().string());
 
-    if(GetBoolArg("-mnconflock", true) && pwalletMain && (masternodeConfig.getCount() > 0)) {
+    if(GetBoolArg("-mnconflock", true) && pwalletMain && (mazanodeConfig.getCount() > 0)) {
         LOCK(pwalletMain->cs_wallet);
-        LogPrintf("Locking Masternodes:\n");
+        LogPrintf("Locking Mazanodes:\n");
         uint256 mnTxHash;
         uint32_t outputIndex;
-        for (const auto& mne : masternodeConfig.getEntries()) {
+        for (const auto& mne : mazanodeConfig.getEntries()) {
             mnTxHash.SetHex(mne.getTxHash());
             outputIndex = (uint32_t)atoi(mne.getOutputIndex());
             COutPoint outpoint = COutPoint(mnTxHash, outputIndex);
@@ -1883,18 +1883,18 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         std::string strDBName;
 
         strDBName = "mncache.dat";
-        uiInterface.InitMessage(_("Loading masternode cache..."));
-        CFlatDB<CMasternodeMan> flatdb1(strDBName, "magicMasternodeCache");
+        uiInterface.InitMessage(_("Loading mazanode cache..."));
+        CFlatDB<CMazanodeMan> flatdb1(strDBName, "magicMazanodeCache");
         if(!flatdb1.Load(mnodeman)) {
-            return InitError(_("Failed to load masternode cache from") + "\n" + (pathDB / strDBName).string());
+            return InitError(_("Failed to load mazanode cache from") + "\n" + (pathDB / strDBName).string());
         }
 
         if(mnodeman.size()) {
             strDBName = "mnpayments.dat";
-            uiInterface.InitMessage(_("Loading masternode payment cache..."));
-            CFlatDB<CMasternodePayments> flatdb2(strDBName, "magicMasternodePaymentsCache");
+            uiInterface.InitMessage(_("Loading mazanode payment cache..."));
+            CFlatDB<CMazanodePayments> flatdb2(strDBName, "magicMazanodePaymentsCache");
             if(!flatdb2.Load(mnpayments)) {
-                return InitError(_("Failed to load masternode payments cache from") + "\n" + (pathDB / strDBName).string());
+                return InitError(_("Failed to load mazanode payments cache from") + "\n" + (pathDB / strDBName).string());
             }
 
             strDBName = "governance.dat";
@@ -1905,7 +1905,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
             }
             governance.InitOnLoad();
         } else {
-            uiInterface.InitMessage(_("Masternode cache is empty, skipping payments and governance cache..."));
+            uiInterface.InitMessage(_("Mazanode cache is empty, skipping payments and governance cache..."));
         }
 
         strDBName = "netfulfilled.dat";
@@ -1917,17 +1917,17 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     }
 
 
-    // ********************************************************* Step 11c: update block tip in Dash modules
+    // ********************************************************* Step 11c: update block tip in Maza modules
 
     // force UpdatedBlockTip to initialize nCachedBlockHeight for DS, MN payments and budgets
     // but don't call it directly to prevent triggering of other listeners like zmq etc.
     // GetMainSignals().UpdatedBlockTip(chainActive.Tip());
     pdsNotificationInterface->InitializeCurrentBlockTip();
 
-    // ********************************************************* Step 11d: start dash-ps-<smth> threads
+    // ********************************************************* Step 11d: start maza-ps-<smth> threads
 
     threadGroup.create_thread(boost::bind(&ThreadCheckPrivateSend, boost::ref(*g_connman)));
-    if (fMasternodeMode)
+    if (fMazanodeMode)
         threadGroup.create_thread(boost::bind(&ThreadCheckPrivateSendServer, boost::ref(*g_connman)));
 #ifdef ENABLE_WALLET
     else

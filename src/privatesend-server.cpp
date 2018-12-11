@@ -1,14 +1,14 @@
-// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2014-2017 The Maza Network developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #include "privatesend-server.h"
 
-#include "activemasternode.h"
+#include "activemazanode.h"
 #include "consensus/validation.h"
 #include "core_io.h"
 #include "init.h"
-#include "masternode-sync.h"
-#include "masternodeman.h"
+#include "mazanode-sync.h"
+#include "mazanodeman.h"
 #include "netmessagemaker.h"
 #include "script/interpreter.h"
 #include "txmempool.h"
@@ -19,9 +19,9 @@ CPrivateSendServer privateSendServer;
 
 void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman)
 {
-    if(!fMasternodeMode) return;
-    if(fLiteMode) return; // ignore all Dash related functionality
-    if(!masternodeSync.IsBlockchainSynced()) return;
+    if(!fMazanodeMode) return;
+    if(fLiteMode) return; // ignore all Maza related functionality
+    if(!mazanodeSync.IsBlockchainSynced()) return;
 
     if(strCommand == NetMsgType::DSACCEPT) {
 
@@ -47,8 +47,8 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
 
         if(dsa.nInputCount < 0 || dsa.nInputCount > PRIVATESEND_ENTRY_MAX_SIZE) return;
 
-        masternode_info_t mnInfo;
-        if(!mnodeman.GetMasternodeInfo(activeMasternode.outpoint, mnInfo)) {
+        mazanode_info_t mnInfo;
+        if(!mnodeman.GetMazanodeInfo(activeMazanode.outpoint, mnInfo)) {
             PushStatus(pfrom, STATUS_REJECTED, ERR_MN_LIST, connman);
             return;
         }
@@ -102,20 +102,20 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
         if(dsq.IsExpired()) return;
         if(dsq.nInputCount < 0 || dsq.nInputCount > PRIVATESEND_ENTRY_MAX_SIZE) return;
 
-        masternode_info_t mnInfo;
-        if(!mnodeman.GetMasternodeInfo(dsq.masternodeOutpoint, mnInfo)) return;
+        mazanode_info_t mnInfo;
+        if(!mnodeman.GetMazanodeInfo(dsq.mazanodeOutpoint, mnInfo)) return;
 
-        if(!dsq.CheckSignature(mnInfo.pubKeyMasternode)) {
+        if(!dsq.CheckSignature(mnInfo.pubKeyMazanode)) {
             // we probably have outdated info
-            mnodeman.AskForMN(pfrom, dsq.masternodeOutpoint, connman);
+            mnodeman.AskForMN(pfrom, dsq.mazanodeOutpoint, connman);
             return;
         }
 
         if(!dsq.fReady) {
             for (const auto& q : vecDarksendQueue) {
-                if(q.masternodeOutpoint == dsq.masternodeOutpoint) {
+                if(q.mazanodeOutpoint == dsq.mazanodeOutpoint) {
                     // no way same mn can send another "not yet ready" dsq this soon
-                    LogPrint("privatesend", "DSQUEUE -- Masternode %s is sending WAY too many dsq messages\n", mnInfo.addr.ToString());
+                    LogPrint("privatesend", "DSQUEUE -- Mazanode %s is sending WAY too many dsq messages\n", mnInfo.addr.ToString());
                     return;
                 }
             }
@@ -124,12 +124,12 @@ void CPrivateSendServer::ProcessMessage(CNode* pfrom, const std::string& strComm
             LogPrint("privatesend", "DSQUEUE -- nLastDsq: %d  threshold: %d  nDsqCount: %d\n", mnInfo.nLastDsq, nThreshold, mnodeman.nDsqCount);
             //don't allow a few nodes to dominate the queuing process
             if(mnInfo.nLastDsq != 0 && nThreshold > mnodeman.nDsqCount) {
-                LogPrint("privatesend", "DSQUEUE -- Masternode %s is sending too many dsq messages\n", mnInfo.addr.ToString());
+                LogPrint("privatesend", "DSQUEUE -- Mazanode %s is sending too many dsq messages\n", mnInfo.addr.ToString());
                 return;
             }
-            mnodeman.AllowMixing(dsq.masternodeOutpoint);
+            mnodeman.AllowMixing(dsq.mazanodeOutpoint);
 
-            LogPrint("privatesend", "DSQUEUE -- new PrivateSend queue (%s) from masternode %s\n", dsq.ToString(), mnInfo.addr.ToString());
+            LogPrint("privatesend", "DSQUEUE -- new PrivateSend queue (%s) from mazanode %s\n", dsq.ToString(), mnInfo.addr.ToString());
             vecDarksendQueue.push_back(dsq);
             dsq.Relay(connman);
         }
@@ -286,11 +286,11 @@ void CPrivateSendServer::SetNull()
 }
 
 //
-// Check the mixing progress and send client updates if a Masternode
+// Check the mixing progress and send client updates if a Mazanode
 //
 void CPrivateSendServer::CheckPool(CConnman& connman)
 {
-    if (!fMasternodeMode) return;
+    if (!fMazanodeMode) return;
 
     LogPrint("privatesend", "CPrivateSendServer::CheckPool -- entries count %lu\n", GetEntriesCount());
 
@@ -337,7 +337,7 @@ void CPrivateSendServer::CreateFinalTransaction(CConnman& connman)
 
 void CPrivateSendServer::CommitFinalTransaction(CConnman& connman)
 {
-    if(!fMasternodeMode) return; // check and relay final tx only on masternode
+    if(!fMazanodeMode) return; // check and relay final tx only on mazanode
 
     CTransactionRef finalTransaction = MakeTransactionRef(finalMutableTransaction);
     uint256 hashTx = finalTransaction->GetHash();
@@ -361,9 +361,9 @@ void CPrivateSendServer::CommitFinalTransaction(CConnman& connman)
 
     LogPrintf("CPrivateSendServer::CommitFinalTransaction -- CREATING DSTX\n");
 
-    // create and sign masternode dstx transaction
+    // create and sign mazanode dstx transaction
     if(!CPrivateSend::GetDSTX(hashTx)) {
-        CDarksendBroadcastTx dstxNew(finalTransaction, activeMasternode.outpoint, GetAdjustedTime());
+        CDarksendBroadcastTx dstxNew(finalTransaction, activeMazanode.outpoint, GetAdjustedTime());
         dstxNew.Sign();
         CPrivateSend::AddDSTX(dstxNew);
     }
@@ -392,13 +392,13 @@ void CPrivateSendServer::CommitFinalTransaction(CConnman& connman)
 // a client submits a transaction then refused to sign, there must be a cost. Otherwise they
 // would be able to do this over and over again and bring the mixing to a halt.
 //
-// How does this work? Messages to Masternodes come in via NetMsgType::DSVIN, these require a valid collateral
-// transaction for the client to be able to enter the pool. This transaction is kept by the Masternode
+// How does this work? Messages to Mazanodes come in via NetMsgType::DSVIN, these require a valid collateral
+// transaction for the client to be able to enter the pool. This transaction is kept by the Mazanode
 // until the transaction is either complete or fails.
 //
 void CPrivateSendServer::ChargeFees(CConnman& connman)
 {
-    if(!fMasternodeMode) return;
+    if(!fMazanodeMode) return;
 
     //we don't need to charge collateral for every offence.
     if(GetRandInt(100) > 33) return;
@@ -468,13 +468,13 @@ void CPrivateSendServer::ChargeFees(CConnman& connman)
 
     Being that mixing has "no fees" we need to have some kind of cost associated
     with using it to stop abuse. Otherwise it could serve as an attack vector and
-    allow endless transaction that would bloat Dash and make it unusable. To
+    allow endless transaction that would bloat Maza and make it unusable. To
     stop these kinds of attacks 1 in 10 successful transactions are charged. This
     adds up to a cost of 0.001DRK per transaction on average.
 */
 void CPrivateSendServer::ChargeRandomFees(CConnman& connman)
 {
-    if(!fMasternodeMode) return;
+    if(!fMazanodeMode) return;
 
     LOCK(cs_main);
 
@@ -497,7 +497,7 @@ void CPrivateSendServer::ChargeRandomFees(CConnman& connman)
 //
 void CPrivateSendServer::CheckTimeout(CConnman& connman)
 {
-    if(!fMasternodeMode) return;
+    if(!fMazanodeMode) return;
 
     CheckQueue();
 
@@ -519,12 +519,12 @@ void CPrivateSendServer::CheckTimeout(CConnman& connman)
 */
 void CPrivateSendServer::CheckForCompleteQueue(CConnman& connman)
 {
-    if(!fMasternodeMode) return;
+    if(!fMazanodeMode) return;
 
     if(nState == POOL_STATE_QUEUE && IsSessionReady()) {
         SetState(POOL_STATE_ACCEPTING_ENTRIES);
 
-        CDarksendQueue dsq(nSessionDenom, nSessionInputCount, activeMasternode.outpoint, GetAdjustedTime(), true);
+        CDarksendQueue dsq(nSessionDenom, nSessionInputCount, activeMazanode.outpoint, GetAdjustedTime(), true);
         LogPrint("privatesend", "CPrivateSendServer::CheckForCompleteQueue -- queue is ready, signing and relaying (%s)\n", dsq.ToString());
         dsq.Sign();
         dsq.Relay(connman);
@@ -579,7 +579,7 @@ bool CPrivateSendServer::IsInputScriptSigValid(const CTxIn& txin)
 //
 bool CPrivateSendServer::AddEntry(const CDarkSendEntry& entryNew, PoolMessage& nMessageIDRet)
 {
-    if(!fMasternodeMode) return false;
+    if(!fMazanodeMode) return false;
 
     for (const auto& txin : entryNew.vecTxDSIn) {
         if(txin.prevout.IsNull()) {
@@ -685,7 +685,7 @@ bool CPrivateSendServer::IsOutputsCompatibleWithSessionDenom(const std::vector<C
 
 bool CPrivateSendServer::IsAcceptableDSA(const CDarksendAccept& dsa, PoolMessage& nMessageIDRet)
 {
-    if(!fMasternodeMode) return false;
+    if(!fMazanodeMode) return false;
 
     // is denom even smth legit?
     std::vector<int> vecBits;
@@ -713,7 +713,7 @@ bool CPrivateSendServer::IsAcceptableDSA(const CDarksendAccept& dsa, PoolMessage
 
 bool CPrivateSendServer::CreateNewSession(const CDarksendAccept& dsa, PoolMessage& nMessageIDRet, CConnman& connman)
 {
-    if(!fMasternodeMode || nSessionID != 0) return false;
+    if(!fMazanodeMode || nSessionID != 0) return false;
 
     // new session can only be started in idle mode
     if(nState != POOL_STATE_IDLE) {
@@ -739,7 +739,7 @@ bool CPrivateSendServer::CreateNewSession(const CDarksendAccept& dsa, PoolMessag
 
     if(!fUnitTest) {
         //broadcast that I'm accepting entries, only if it's the first entry through
-        CDarksendQueue dsq(dsa.nDenom, dsa.nInputCount, activeMasternode.outpoint, GetAdjustedTime(), false);
+        CDarksendQueue dsq(dsa.nDenom, dsa.nInputCount, activeMazanode.outpoint, GetAdjustedTime(), false);
         LogPrint("privatesend", "CPrivateSendServer::CreateNewSession -- signing and relaying new queue: %s\n", dsq.ToString());
         dsq.Sign();
         dsq.Relay(connman);
@@ -755,7 +755,7 @@ bool CPrivateSendServer::CreateNewSession(const CDarksendAccept& dsa, PoolMessag
 
 bool CPrivateSendServer::AddUserToExistingSession(const CDarksendAccept& dsa, PoolMessage& nMessageIDRet)
 {
-    if(!fMasternodeMode || nSessionID == 0 || IsSessionReady()) return false;
+    if(!fMazanodeMode || nSessionID == 0 || IsSessionReady()) return false;
 
     if(!IsAcceptableDSA(dsa, nMessageIDRet)) {
         return false;
@@ -879,10 +879,10 @@ void CPrivateSendServer::RelayCompletedTransaction(PoolMessage nMessageID, CConn
 
 void CPrivateSendServer::SetState(PoolState nStateNew)
 {
-    if(!fMasternodeMode) return;
+    if(!fMazanodeMode) return;
 
     if(nStateNew == POOL_STATE_ERROR || nStateNew == POOL_STATE_SUCCESS) {
-        LogPrint("privatesend", "CPrivateSendServer::SetState -- Can't set state to ERROR or SUCCESS as a Masternode. \n");
+        LogPrint("privatesend", "CPrivateSendServer::SetState -- Can't set state to ERROR or SUCCESS as a Mazanode. \n");
         return;
     }
 
@@ -893,15 +893,15 @@ void CPrivateSendServer::SetState(PoolState nStateNew)
 //TODO: Rename/move to core
 void ThreadCheckPrivateSendServer(CConnman& connman)
 {
-    if(fLiteMode) return; // disable all Dash specific functionality
-    if(!fMasternodeMode) return; // only run on masternodes
+    if(fLiteMode) return; // disable all Maza specific functionality
+    if(!fMazanodeMode) return; // only run on mazanodes
 
     static bool fOneThread;
     if(fOneThread) return;
     fOneThread = true;
 
     // Make this thread recognisable as the PrivateSend thread
-    RenameThread("dash-ps-server");
+    RenameThread("maza-ps-server");
 
     unsigned int nTick = 0;
 
@@ -909,7 +909,7 @@ void ThreadCheckPrivateSendServer(CConnman& connman)
     {
         MilliSleep(1000);
 
-        if(masternodeSync.IsBlockchainSynced() && !ShutdownRequested()) {
+        if(mazanodeSync.IsBlockchainSynced() && !ShutdownRequested()) {
             nTick++;
             privateSendServer.CheckTimeout(connman);
             privateSendServer.CheckForCompleteQueue(connman);

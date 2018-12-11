@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2014-2017 The Maza Network developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,8 +9,8 @@
 #include "governance-vote.h"
 #include "governance-validators.h"
 #include "instantx.h"
-#include "masternode-sync.h"
-#include "masternodeman.h"
+#include "mazanode-sync.h"
+#include "mazanodeman.h"
 #include "messagesigner.h"
 #include "util.h"
 
@@ -25,7 +25,7 @@ CGovernanceObject::CGovernanceObject():
     nDeletionTime(0),
     nCollateralHash(),
     vchData(),
-    masternodeOutpoint(),
+    mazanodeOutpoint(),
     vchSig(),
     fCachedLocalValidity(false),
     strLocalValidityError(),
@@ -53,7 +53,7 @@ CGovernanceObject::CGovernanceObject(const uint256& nHashParentIn, int nRevision
     nDeletionTime(0),
     nCollateralHash(nCollateralHashIn),
     vchData(ParseHex(strDataHexIn)),
-    masternodeOutpoint(),
+    mazanodeOutpoint(),
     vchSig(),
     fCachedLocalValidity(false),
     strLocalValidityError(),
@@ -81,7 +81,7 @@ CGovernanceObject::CGovernanceObject(const CGovernanceObject& other):
     nDeletionTime(other.nDeletionTime),
     nCollateralHash(other.nCollateralHash),
     vchData(other.vchData),
-    masternodeOutpoint(other.masternodeOutpoint),
+    mazanodeOutpoint(other.mazanodeOutpoint),
     vchSig(other.vchSig),
     fCachedLocalValidity(other.fCachedLocalValidity),
     strLocalValidityError(other.strLocalValidityError),
@@ -114,13 +114,13 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
         return false;
     }
 
-    if(!mnodeman.Has(vote.GetMasternodeOutpoint())) {
+    if(!mnodeman.Has(vote.GetMazanodeOutpoint())) {
         std::ostringstream ostr;
-        ostr << "CGovernanceObject::ProcessVote -- Masternode " << vote.GetMasternodeOutpoint().ToStringShort() << " not found";
+        ostr << "CGovernanceObject::ProcessVote -- Mazanode " << vote.GetMazanodeOutpoint().ToStringShort() << " not found";
         exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_WARNING);
-        if(cmmapOrphanVotes.Insert(vote.GetMasternodeOutpoint(), vote_time_pair_t(vote, GetAdjustedTime() + GOVERNANCE_ORPHAN_EXPIRATION_TIME))) {
+        if(cmmapOrphanVotes.Insert(vote.GetMazanodeOutpoint(), vote_time_pair_t(vote, GetAdjustedTime() + GOVERNANCE_ORPHAN_EXPIRATION_TIME))) {
             if(pfrom) {
-                mnodeman.AskForMN(pfrom, vote.GetMasternodeOutpoint(), connman);
+                mnodeman.AskForMN(pfrom, vote.GetMazanodeOutpoint(), connman);
             }
             LogPrintf("%s\n", ostr.str());
         }
@@ -130,7 +130,7 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
         return false;
     }
 
-    vote_m_it it = mapCurrentMNVotes.emplace(vote_m_t::value_type(vote.GetMasternodeOutpoint(), vote_rec_t())).first;
+    vote_m_it it = mapCurrentMNVotes.emplace(vote_m_t::value_type(vote.GetMazanodeOutpoint(), vote_rec_t())).first;
     vote_rec_t& voteRecordRef = it->second;
     vote_signal_enum_t eSignal = vote.GetSignal();
     if(eSignal == VOTE_SIGNAL_NONE) {
@@ -165,8 +165,8 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
         int64_t nTimeDelta = nNow - voteInstanceRef.nTime;
         if(nTimeDelta < GOVERNANCE_UPDATE_MIN) {
             std::ostringstream ostr;
-            ostr << "CGovernanceObject::ProcessVote -- Masternode voting too often"
-                 << ", MN outpoint = " << vote.GetMasternodeOutpoint().ToStringShort()
+            ostr << "CGovernanceObject::ProcessVote -- Mazanode voting too often"
+                 << ", MN outpoint = " << vote.GetMazanodeOutpoint().ToStringShort()
                  << ", governance object hash = " << GetHash().ToString()
                  << ", time delta = " << nTimeDelta;
             LogPrint("gobject", "%s\n", ostr.str());
@@ -180,7 +180,7 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
     if(!vote.IsValid(true)) {
         std::ostringstream ostr;
         ostr << "CGovernanceObject::ProcessVote -- Invalid vote"
-                << ", MN outpoint = " << vote.GetMasternodeOutpoint().ToStringShort()
+                << ", MN outpoint = " << vote.GetMazanodeOutpoint().ToStringShort()
                 << ", governance object hash = " << GetHash().ToString()
                 << ", vote hash = " << vote.GetHash().ToString();
         LogPrintf("%s\n", ostr.str());
@@ -189,10 +189,10 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
         return false;
     }
 
-    if(!mnodeman.AddGovernanceVote(vote.GetMasternodeOutpoint(), vote.GetParentHash())) {
+    if(!mnodeman.AddGovernanceVote(vote.GetMazanodeOutpoint(), vote.GetParentHash())) {
         std::ostringstream ostr;
         ostr << "CGovernanceObject::ProcessVote -- Unable to add governance vote"
-             << ", MN outpoint = " << vote.GetMasternodeOutpoint().ToStringShort()
+             << ", MN outpoint = " << vote.GetMazanodeOutpoint().ToStringShort()
              << ", governance object hash = " << GetHash().ToString();
         LogPrint("gobject", "%s\n", ostr.str());
         exception = CGovernanceException(ostr.str(), GOVERNANCE_EXCEPTION_PERMANENT_ERROR);
@@ -205,14 +205,14 @@ bool CGovernanceObject::ProcessVote(CNode* pfrom,
     return true;
 }
 
-void CGovernanceObject::ClearMasternodeVotes()
+void CGovernanceObject::ClearMazanodeVotes()
 {
     LOCK(cs);
 
     vote_m_it it = mapCurrentMNVotes.begin();
     while(it != mapCurrentMNVotes.end()) {
         if(!mnodeman.Has(it->first)) {
-            fileVotes.RemoveVotesFromMasternode(it->first);
+            fileVotes.RemoveVotesFromMazanode(it->first);
             mapCurrentMNVotes.erase(it++);
         }
         else {
@@ -228,7 +228,7 @@ std::string CGovernanceObject::GetSignatureMessage() const
         boost::lexical_cast<std::string>(nRevision) + "|" +
         boost::lexical_cast<std::string>(nTime) + "|" +
         GetDataAsHexString() + "|" +
-        masternodeOutpoint.ToStringShort() + "|" +
+        mazanodeOutpoint.ToStringShort() + "|" +
         nCollateralHash.ToString();
 
     return strMessage;
@@ -245,7 +245,7 @@ uint256 CGovernanceObject::GetHash() const
     ss << nRevision;
     ss << nTime;
     ss << GetDataAsHexString();
-    ss << masternodeOutpoint << uint8_t{} << 0xffffffff; // adding dummy values here to match old hashing
+    ss << mazanodeOutpoint << uint8_t{} << 0xffffffff; // adding dummy values here to match old hashing
     ss << vchSig;
     // fee_tx is left out on purpose
 
@@ -259,58 +259,58 @@ uint256 CGovernanceObject::GetSignatureHash() const
     return SerializeHash(*this);
 }
 
-void CGovernanceObject::SetMasternodeOutpoint(const COutPoint& outpoint)
+void CGovernanceObject::SetMazanodeOutpoint(const COutPoint& outpoint)
 {
-    masternodeOutpoint = outpoint;
+    mazanodeOutpoint = outpoint;
 }
 
-bool CGovernanceObject::Sign(const CKey& keyMasternode, const CPubKey& pubKeyMasternode)
+bool CGovernanceObject::Sign(const CKey& keyMazanode, const CPubKey& pubKeyMazanode)
 {
     std::string strError;
 
     if (sporkManager.IsSporkActive(SPORK_6_NEW_SIGS)) {
         uint256 hash = GetSignatureHash();
 
-        if (!CHashSigner::SignHash(hash, keyMasternode, vchSig)) {
+        if (!CHashSigner::SignHash(hash, keyMazanode, vchSig)) {
             LogPrintf("CGovernanceObject::Sign -- SignHash() failed\n");
             return false;
         }
 
-        if (!CHashSigner::VerifyHash(hash, pubKeyMasternode, vchSig, strError)) {
+        if (!CHashSigner::VerifyHash(hash, pubKeyMazanode, vchSig, strError)) {
             LogPrintf("CGovernanceObject::Sign -- VerifyHash() failed, error: %s\n", strError);
             return false;
         }
     } else {
         std::string strMessage = GetSignatureMessage();
-        if (!CMessageSigner::SignMessage(strMessage, vchSig, keyMasternode)) {
+        if (!CMessageSigner::SignMessage(strMessage, vchSig, keyMazanode)) {
             LogPrintf("CGovernanceObject::Sign -- SignMessage() failed\n");
             return false;
         }
 
-        if (!CMessageSigner::VerifyMessage(pubKeyMasternode, vchSig, strMessage, strError)) {
+        if (!CMessageSigner::VerifyMessage(pubKeyMazanode, vchSig, strMessage, strError)) {
             LogPrintf("CGovernanceObject::Sign -- VerifyMessage() failed, error: %s\n", strError);
             return false;
         }
     }
 
-    LogPrint("gobject", "CGovernanceObject::Sign -- pubkey id = %s, masternode = %s\n",
-             pubKeyMasternode.GetID().ToString(), masternodeOutpoint.ToStringShort());
+    LogPrint("gobject", "CGovernanceObject::Sign -- pubkey id = %s, mazanode = %s\n",
+             pubKeyMazanode.GetID().ToString(), mazanodeOutpoint.ToStringShort());
 
     return true;
 }
 
-bool CGovernanceObject::CheckSignature(const CPubKey& pubKeyMasternode) const
+bool CGovernanceObject::CheckSignature(const CPubKey& pubKeyMazanode) const
 {
     std::string strError;
 
     if (sporkManager.IsSporkActive(SPORK_6_NEW_SIGS)) {
         uint256 hash = GetSignatureHash();
 
-        if (!CHashSigner::VerifyHash(hash, pubKeyMasternode, vchSig, strError)) {
+        if (!CHashSigner::VerifyHash(hash, pubKeyMazanode, vchSig, strError)) {
             // could be an old object
             std::string strMessage = GetSignatureMessage();
 
-            if (!CMessageSigner::VerifyMessage(pubKeyMasternode, vchSig, strMessage, strError)) {
+            if (!CMessageSigner::VerifyMessage(pubKeyMazanode, vchSig, strMessage, strError)) {
                 // nope, not in old format either
                 LogPrintf("CGovernance::CheckSignature -- VerifyMessage() failed, error: %s\n", strError);
                 return false;
@@ -319,7 +319,7 @@ bool CGovernanceObject::CheckSignature(const CPubKey& pubKeyMasternode) const
     } else {
         std::string strMessage = GetSignatureMessage();
 
-        if (!CMessageSigner::VerifyMessage(pubKeyMasternode, vchSig, strMessage, strError)) {
+        if (!CMessageSigner::VerifyMessage(pubKeyMazanode, vchSig, strMessage, strError)) {
             LogPrintf("CGovernance::CheckSignature -- VerifyMessage() failed, error: %s\n", strError);
             return false;
         }
@@ -444,15 +444,15 @@ void CGovernanceObject::UpdateLocalValidity()
 
 bool CGovernanceObject::IsValidLocally(std::string& strError, bool fCheckCollateral) const
 {
-    bool fMissingMasternode = false;
+    bool fMissingMazanode = false;
     bool fMissingConfirmations = false;
 
-    return IsValidLocally(strError, fMissingMasternode, fMissingConfirmations, fCheckCollateral);
+    return IsValidLocally(strError, fMissingMazanode, fMissingConfirmations, fCheckCollateral);
 }
 
-bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingMasternode, bool& fMissingConfirmations, bool fCheckCollateral) const
+bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingMazanode, bool& fMissingConfirmations, bool fCheckCollateral) const
 {
-    fMissingMasternode = false;
+    fMissingMazanode = false;
     fMissingConfirmations = false;
 
     if (fUnparsable) {
@@ -485,29 +485,29 @@ bool CGovernanceObject::IsValidLocally(std::string& strError, bool& fMissingMast
                 // nothing else we can check here (yet?)
                 return true;
 
-            std::string strOutpoint = masternodeOutpoint.ToStringShort();
-            masternode_info_t infoMn;
-            if (!mnodeman.GetMasternodeInfo(masternodeOutpoint, infoMn)) {
+            std::string strOutpoint = mazanodeOutpoint.ToStringShort();
+            mazanode_info_t infoMn;
+            if (!mnodeman.GetMazanodeInfo(mazanodeOutpoint, infoMn)) {
 
-                CMasternode::CollateralStatus err = CMasternode::CheckCollateral(masternodeOutpoint, CPubKey());
-                if (err == CMasternode::COLLATERAL_UTXO_NOT_FOUND) {
-                    strError = "Failed to find Masternode UTXO, missing masternode=" + strOutpoint + "\n";
-                } else if (err == CMasternode::COLLATERAL_INVALID_AMOUNT) {
-                    strError = "Masternode UTXO should have 1000 DASH, missing masternode=" + strOutpoint + "\n";
-                } else if (err == CMasternode::COLLATERAL_INVALID_PUBKEY) {
-                    fMissingMasternode = true;
-                    strError = "Masternode not found: " + strOutpoint;
-                } else if (err == CMasternode::COLLATERAL_OK) {
+                CMazanode::CollateralStatus err = CMazanode::CheckCollateral(mazanodeOutpoint, CPubKey());
+                if (err == CMazanode::COLLATERAL_UTXO_NOT_FOUND) {
+                    strError = "Failed to find Mazanode UTXO, missing mazanode=" + strOutpoint + "\n";
+                } else if (err == CMazanode::COLLATERAL_INVALID_AMOUNT) {
+                    strError = "Mazanode UTXO should have 1000 MAZA, missing mazanode=" + strOutpoint + "\n";
+                } else if (err == CMazanode::COLLATERAL_INVALID_PUBKEY) {
+                    fMissingMazanode = true;
+                    strError = "Mazanode not found: " + strOutpoint;
+                } else if (err == CMazanode::COLLATERAL_OK) {
                     // this should never happen with CPubKey() as a param
-                    strError = "CheckCollateral critical failure! Masternode: " + strOutpoint;
+                    strError = "CheckCollateral critical failure! Mazanode: " + strOutpoint;
                 }
 
                 return false;
             }
 
             // Check that we have a valid MN signature
-            if (!CheckSignature(infoMn.pubKeyMasternode)) {
-                strError = "Invalid masternode signature for: " + strOutpoint + ", pubkey id = " + infoMn.pubKeyMasternode.GetID().ToString();
+            if (!CheckSignature(infoMn.pubKeyMazanode)) {
+                strError = "Invalid mazanode signature for: " + strOutpoint + ", pubkey id = " + infoMn.pubKeyMazanode.GetID().ToString();
                 return false;
             }
 
@@ -691,7 +691,7 @@ bool CGovernanceObject::GetCurrentMNVotes(const COutPoint& mnCollateralOutpoint,
 void CGovernanceObject::Relay(CConnman& connman)
 {
     // Do not relay until fully synced
-    if(!masternodeSync.IsSynced()) {
+    if(!mazanodeSync.IsSynced()) {
         LogPrint("gobject", "CGovernanceObject::Relay -- won't relay until fully synced\n");
         return;
     }
@@ -771,7 +771,7 @@ void CGovernanceObject::CheckOrphanVotes(CConnman& connman)
         if(pairVote.second < nNow) {
             fRemove = true;
         }
-        else if(!mnodeman.Has(vote.GetMasternodeOutpoint())) {
+        else if(!mnodeman.Has(vote.GetMazanodeOutpoint())) {
             ++it;
             continue;
         }

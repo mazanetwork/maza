@@ -1,6 +1,6 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2014-2017 The Maza Network developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -20,7 +20,7 @@
 #include "wallet/walletdb.h"
 #endif
 
-#include "masternode-sync.h"
+#include "mazanode-sync.h"
 #include "spork.h"
 
 #include <stdint.h>
@@ -54,8 +54,8 @@ UniValue getinfo(const JSONRPCRequest& request)
             "  \"version\": xxxxx,           (numeric) the server version\n"
             "  \"protocolversion\": xxxxx,   (numeric) the protocol version\n"
             "  \"walletversion\": xxxxx,     (numeric) the wallet version\n"
-            "  \"balance\": xxxxxxx,         (numeric) the total dash balance of the wallet\n"
-            "  \"privatesend_balance\": xxxxxx, (numeric) the anonymized dash balance of the wallet\n"
+            "  \"balance\": xxxxxxx,         (numeric) the total maza balance of the wallet\n"
+            "  \"privatesend_balance\": xxxxxx, (numeric) the anonymized maza balance of the wallet\n"
             "  \"blocks\": xxxxxx,           (numeric) the current number of blocks processed in the server\n"
             "  \"timeoffset\": xxxxx,        (numeric) the time offset\n"
             "  \"connections\": xxxxx,       (numeric) the number of connections\n"
@@ -121,11 +121,11 @@ UniValue debug(const JSONRPCRequest& request)
         throw std::runtime_error(
             "debug ( 0|1|addrman|alert|bench|coindb|db|lock|rand|rpc|selectcoins|mempool"
             "|mempoolrej|net|proxy|prune|http|libevent|tor|zmq|"
-            "dash|privatesend|instantsend|masternode|spork|keepass|mnpayments|gobject )\n"
+            "maza|privatesend|instantsend|mazanode|spork|keepass|mnpayments|gobject )\n"
             "Change debug category on the fly. Specify single category or use '+' to specify many.\n"
             "\nExamples:\n"
-            + HelpExampleCli("debug", "dash")
-            + HelpExampleRpc("debug", "dash+net")
+            + HelpExampleCli("debug", "maza")
+            + HelpExampleRpc("debug", "maza+net")
         );
 
     std::string strMode = request.params[0].get_str();
@@ -152,28 +152,28 @@ UniValue mnsync(const JSONRPCRequest& request)
 
     if(strMode == "status") {
         UniValue objStatus(UniValue::VOBJ);
-        objStatus.push_back(Pair("AssetID", masternodeSync.GetAssetID()));
-        objStatus.push_back(Pair("AssetName", masternodeSync.GetAssetName()));
-        objStatus.push_back(Pair("AssetStartTime", masternodeSync.GetAssetStartTime()));
-        objStatus.push_back(Pair("Attempt", masternodeSync.GetAttempt()));
-        objStatus.push_back(Pair("IsBlockchainSynced", masternodeSync.IsBlockchainSynced()));
-        objStatus.push_back(Pair("IsMasternodeListSynced", masternodeSync.IsMasternodeListSynced()));
-        objStatus.push_back(Pair("IsWinnersListSynced", masternodeSync.IsWinnersListSynced()));
-        objStatus.push_back(Pair("IsSynced", masternodeSync.IsSynced()));
-        objStatus.push_back(Pair("IsFailed", masternodeSync.IsFailed()));
+        objStatus.push_back(Pair("AssetID", mazanodeSync.GetAssetID()));
+        objStatus.push_back(Pair("AssetName", mazanodeSync.GetAssetName()));
+        objStatus.push_back(Pair("AssetStartTime", mazanodeSync.GetAssetStartTime()));
+        objStatus.push_back(Pair("Attempt", mazanodeSync.GetAttempt()));
+        objStatus.push_back(Pair("IsBlockchainSynced", mazanodeSync.IsBlockchainSynced()));
+        objStatus.push_back(Pair("IsMazanodeListSynced", mazanodeSync.IsMazanodeListSynced()));
+        objStatus.push_back(Pair("IsWinnersListSynced", mazanodeSync.IsWinnersListSynced()));
+        objStatus.push_back(Pair("IsSynced", mazanodeSync.IsSynced()));
+        objStatus.push_back(Pair("IsFailed", mazanodeSync.IsFailed()));
         return objStatus;
     }
 
     if(strMode == "next")
     {
-        masternodeSync.SwitchToNextAsset(*g_connman);
-        return "sync updated to " + masternodeSync.GetAssetName();
+        mazanodeSync.SwitchToNextAsset(*g_connman);
+        return "sync updated to " + mazanodeSync.GetAssetName();
     }
 
     if(strMode == "reset")
     {
-        masternodeSync.Reset();
-        masternodeSync.SwitchToNextAsset(*g_connman);
+        mazanodeSync.Reset();
+        mazanodeSync.SwitchToNextAsset(*g_connman);
         return "success";
     }
     return "failure";
@@ -303,13 +303,13 @@ UniValue validateaddress(const JSONRPCRequest& request)
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
             "validateaddress \"address\"\n"
-            "\nReturn information about the given dash address.\n"
+            "\nReturn information about the given maza address.\n"
             "\nArguments:\n"
-            "1. \"address\"     (string, required) The dash address to validate\n"
+            "1. \"address\"     (string, required) The maza address to validate\n"
             "\nResult:\n"
             "{\n"
             "  \"isvalid\" : true|false,       (boolean) If the address is valid or not. If not, this is the only property returned.\n"
-            "  \"address\" : \"address\", (string) The dash address validated\n"
+            "  \"address\" : \"address\", (string) The maza address validated\n"
             "  \"scriptPubKey\" : \"hex\",       (string) The hex encoded scriptPubKey generated by the address\n"
             "  \"ismine\" : true|false,        (boolean) If the address is yours or not\n"
             "  \"iswatchonly\" : true|false,   (boolean) If the address is watchonly\n"
@@ -399,7 +399,7 @@ CScript _createmultisig_redeemScript(const UniValue& params)
     {
         const std::string& ks = keys[i].get_str();
 #ifdef ENABLE_WALLET
-        // Case 1: Dash address and we have full public key:
+        // Case 1: Maza address and we have full public key:
         CBitcoinAddress address(ks);
         if (pwalletMain && address.IsValid())
         {
@@ -450,9 +450,9 @@ UniValue createmultisig(const JSONRPCRequest& request)
 
             "\nArguments:\n"
             "1. nrequired      (numeric, required) The number of required signatures out of the n keys or addresses.\n"
-            "2. \"keys\"       (string, required) A json array of keys which are dash addresses or hex-encoded public keys\n"
+            "2. \"keys\"       (string, required) A json array of keys which are maza addresses or hex-encoded public keys\n"
             "     [\n"
-            "       \"key\"    (string) dash address or hex-encoded public key\n"
+            "       \"key\"    (string) maza address or hex-encoded public key\n"
             "       ,...\n"
             "     ]\n"
 
@@ -490,7 +490,7 @@ UniValue verifymessage(const JSONRPCRequest& request)
             "verifymessage \"address\" \"signature\" \"message\"\n"
             "\nVerify a signed message\n"
             "\nArguments:\n"
-            "1. \"address\"         (string, required) The dash address to use for the signature.\n"
+            "1. \"address\"         (string, required) The maza address to use for the signature.\n"
             "2. \"signature\"       (string, required) The signature provided by the signer in base 64 encoding (see signmessage).\n"
             "3. \"message\"         (string, required) The message that was signed.\n"
             "\nResult:\n"
@@ -1150,9 +1150,9 @@ static const CRPCCommand commands[] =
     { "addressindex",       "getaddresstxids",        &getaddresstxids,        false, {"addresses"} },
     { "addressindex",       "getaddressbalance",      &getaddressbalance,      false, {"addresses"} },
 
-    /* Dash features */
-    { "dash",               "mnsync",                 &mnsync,                 true,  {} },
-    { "dash",               "spork",                  &spork,                  true,  {"value"} },
+    /* Maza features */
+    { "maza",               "mnsync",                 &mnsync,                 true,  {} },
+    { "maza",               "spork",                  &spork,                  true,  {"value"} },
 
     /* Not shown in help */
     { "hidden",             "setmocktime",            &setmocktime,            true,  {"timestamp"}},

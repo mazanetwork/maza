@@ -224,14 +224,14 @@
         </widget>
        </item>
        <item row="9" column="0">
-        <widget class="QLabel" name="masternodeCountLabel">
+        <widget class="QLabel" name="mazanodeCountLabel">
          <property name="text">
-          <string>Number of Masternodes</string>
+          <string>Number of Mazanodes</string>
          </property>
         </widget>
        </item>
        <item row="9" column="1">
-        <widget class="QLabel" name="masternodeCount">
+        <widget class="QLabel" name="mazanodeCount">
          <property name="text">
           <string>N/A</string>
          </property>
@@ -576,7 +576,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="../dash.qrc">
+            <iconset resource="../maza.qrc">
              <normaloff>:/icons/prompticon</normaloff>
              <disabledoff>:/icons/prompticon</disabledoff>:/icons/prompticon</iconset>
            </property>
@@ -1715,7 +1715,7 @@
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="../dash.qrc"/>
+  <include location="../maza.qrc"/>
  </resources>
  <connections/>
 </ui>

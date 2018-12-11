@@ -1,5 +1,5 @@
 // Copyright (c) 2011-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2014-2017 The Maza Network developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -20,8 +20,8 @@
 #include "ui_interface.h"
 #include "util.h"
 
-#include "masternodeman.h"
-#include "masternode-sync.h"
+#include "mazanodeman.h"
+#include "mazanode-sync.h"
 #include "privatesend.h"
 
 #include <stdint.h>
@@ -39,7 +39,7 @@ ClientModel::ClientModel(OptionsModel *_optionsModel, QObject *parent) :
     QObject(parent),
     optionsModel(_optionsModel),
     peerTableModel(0),
-    cachedMasternodeCountString(""),
+    cachedMazanodeCountString(""),
     banTableModel(0),
     pollTimer(0)
 {
@@ -80,7 +80,7 @@ int ClientModel::getNumConnections(unsigned int flags) const
     return 0;
 }
 
-QString ClientModel::getMasternodeCountString() const
+QString ClientModel::getMazanodeCountString() const
 {
     // return tr("Total: %1 (PS compatible: %2 / Enabled: %3) (IPv4: %4, IPv6: %5, TOR: %6)").arg(QString::number((int)mnodeman.size()))
     return tr("Total: %1 (PS compatible: %2 / Enabled: %3)")
@@ -179,13 +179,13 @@ void ClientModel::updateTimer()
 
 void ClientModel::updateMnTimer()
 {
-    QString newMasternodeCountString = getMasternodeCountString();
+    QString newMazanodeCountString = getMazanodeCountString();
 
-    if (cachedMasternodeCountString != newMasternodeCountString)
+    if (cachedMazanodeCountString != newMazanodeCountString)
     {
-        cachedMasternodeCountString = newMasternodeCountString;
+        cachedMazanodeCountString = newMazanodeCountString;
 
-        Q_EMIT strMasternodesChanged(cachedMasternodeCountString);
+        Q_EMIT strMazanodesChanged(cachedMazanodeCountString);
     }
 }
 

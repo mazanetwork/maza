@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2014-2017 The Maza Network developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #include "privatesend-client.h"
@@ -7,9 +7,9 @@
 #include "consensus/validation.h"
 #include "core_io.h"
 #include "init.h"
-#include "masternode-payments.h"
-#include "masternode-sync.h"
-#include "masternodeman.h"
+#include "mazanode-payments.h"
+#include "mazanode-sync.h"
+#include "mazanodeman.h"
 #include "netmessagemaker.h"
 #include "script/sign.h"
 #include "txmempool.h"
@@ -22,9 +22,9 @@ CPrivateSendClient privateSendClient;
 
 void CPrivateSendClient::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman)
 {
-    if(fMasternodeMode) return;
-    if(fLiteMode) return; // ignore all Dash related functionality
-    if(!masternodeSync.IsBlockchainSynced()) return;
+    if(fMazanodeMode) return;
+    if(fLiteMode) return; // ignore all Maza related functionality
+    if(!mazanodeSync.IsBlockchainSynced()) return;
 
     if(strCommand == NetMsgType::DSQUEUE) {
         TRY_LOCK(cs_darksend, lockRecv);
@@ -53,32 +53,32 @@ void CPrivateSendClient::ProcessMessage(CNode* pfrom, const std::string& strComm
         if(dsq.IsExpired()) return;
         if(dsq.nInputCount < 0 || dsq.nInputCount > PRIVATESEND_ENTRY_MAX_SIZE) return;
 
-        masternode_info_t infoMn;
-        if(!mnodeman.GetMasternodeInfo(dsq.masternodeOutpoint, infoMn)) return;
+        mazanode_info_t infoMn;
+        if(!mnodeman.GetMazanodeInfo(dsq.mazanodeOutpoint, infoMn)) return;
 
-        if(!dsq.CheckSignature(infoMn.pubKeyMasternode)) {
+        if(!dsq.CheckSignature(infoMn.pubKeyMazanode)) {
             // we probably have outdated info
-            mnodeman.AskForMN(pfrom, dsq.masternodeOutpoint, connman);
+            mnodeman.AskForMN(pfrom, dsq.mazanodeOutpoint, connman);
             return;
         }
 
         // if the queue is ready, submit if we can
         if(dsq.fReady) {
-            if(!infoMixingMasternode.fInfoValid) return;
-            if(infoMixingMasternode.addr != infoMn.addr) {
-                LogPrintf("DSQUEUE -- message doesn't match current Masternode: infoMixingMasternode=%s, addr=%s\n", infoMixingMasternode.addr.ToString(), infoMn.addr.ToString());
+            if(!infoMixingMazanode.fInfoValid) return;
+            if(infoMixingMazanode.addr != infoMn.addr) {
+                LogPrintf("DSQUEUE -- message doesn't match current Mazanode: infoMixingMazanode=%s, addr=%s\n", infoMixingMazanode.addr.ToString(), infoMn.addr.ToString());
                 return;
             }
 
             if(nState == POOL_STATE_QUEUE) {
-                LogPrint("privatesend", "DSQUEUE -- PrivateSend queue (%s) is ready on masternode %s\n", dsq.ToString(), infoMn.addr.ToString());
+                LogPrint("privatesend", "DSQUEUE -- PrivateSend queue (%s) is ready on mazanode %s\n", dsq.ToString(), infoMn.addr.ToString());
                 SubmitDenominate(connman);
             }
         } else {
             for (const auto& q : vecDarksendQueue) {
-                if(q.masternodeOutpoint == dsq.masternodeOutpoint) {
+                if(q.mazanodeOutpoint == dsq.mazanodeOutpoint) {
                     // no way same mn can send another "not yet ready" dsq this soon
-                    LogPrint("privatesend", "DSQUEUE -- Masternode %s is sending WAY too many dsq messages\n", infoMn.addr.ToString());
+                    LogPrint("privatesend", "DSQUEUE -- Mazanode %s is sending WAY too many dsq messages\n", infoMn.addr.ToString());
                     return;
                 }
             }
@@ -87,14 +87,14 @@ void CPrivateSendClient::ProcessMessage(CNode* pfrom, const std::string& strComm
             LogPrint("privatesend", "DSQUEUE -- nLastDsq: %d  threshold: %d  nDsqCount: %d\n", infoMn.nLastDsq, nThreshold, mnodeman.nDsqCount);
             //don't allow a few nodes to dominate the queuing process
             if(infoMn.nLastDsq != 0 && nThreshold > mnodeman.nDsqCount) {
-                LogPrint("privatesend", "DSQUEUE -- Masternode %s is sending too many dsq messages\n", infoMn.addr.ToString());
+                LogPrint("privatesend", "DSQUEUE -- Mazanode %s is sending too many dsq messages\n", infoMn.addr.ToString());
                 return;
             }
 
-            if(!mnodeman.AllowMixing(dsq.masternodeOutpoint)) return;
+            if(!mnodeman.AllowMixing(dsq.mazanodeOutpoint)) return;
 
-            LogPrint("privatesend", "DSQUEUE -- new PrivateSend queue (%s) from masternode %s\n", dsq.ToString(), infoMn.addr.ToString());
-            if(infoMixingMasternode.fInfoValid && infoMixingMasternode.outpoint == dsq.masternodeOutpoint) {
+            LogPrint("privatesend", "DSQUEUE -- new PrivateSend queue (%s) from mazanode %s\n", dsq.ToString(), infoMn.addr.ToString());
+            if(infoMixingMazanode.fInfoValid && infoMixingMazanode.outpoint == dsq.mazanodeOutpoint) {
                 dsq.fTried = true;
             }
             vecDarksendQueue.push_back(dsq);
@@ -110,9 +110,9 @@ void CPrivateSendClient::ProcessMessage(CNode* pfrom, const std::string& strComm
             return;
         }
 
-        if(!infoMixingMasternode.fInfoValid) return;
-        if(infoMixingMasternode.addr != pfrom->addr) {
-            //LogPrintf("DSSTATUSUPDATE -- message doesn't match current Masternode: infoMixingMasternode %s addr %s\n", infoMixingMasternode.addr.ToString(), pfrom->addr.ToString());
+        if(!infoMixingMazanode.fInfoValid) return;
+        if(infoMixingMazanode.addr != pfrom->addr) {
+            //LogPrintf("DSSTATUSUPDATE -- message doesn't match current Mazanode: infoMixingMazanode %s addr %s\n", infoMixingMazanode.addr.ToString(), pfrom->addr.ToString());
             return;
         }
 
@@ -154,9 +154,9 @@ void CPrivateSendClient::ProcessMessage(CNode* pfrom, const std::string& strComm
             return;
         }
 
-        if(!infoMixingMasternode.fInfoValid) return;
-        if(infoMixingMasternode.addr != pfrom->addr) {
-            //LogPrintf("DSFINALTX -- message doesn't match current Masternode: infoMixingMasternode %s addr %s\n", infoMixingMasternode.addr.ToString(), pfrom->addr.ToString());
+        if(!infoMixingMazanode.fInfoValid) return;
+        if(infoMixingMazanode.addr != pfrom->addr) {
+            //LogPrintf("DSFINALTX -- message doesn't match current Mazanode: infoMixingMazanode %s addr %s\n", infoMixingMazanode.addr.ToString(), pfrom->addr.ToString());
             return;
         }
 
@@ -183,9 +183,9 @@ void CPrivateSendClient::ProcessMessage(CNode* pfrom, const std::string& strComm
             return;
         }
 
-        if(!infoMixingMasternode.fInfoValid) return;
-        if(infoMixingMasternode.addr != pfrom->addr) {
-            LogPrint("privatesend", "DSCOMPLETE -- message doesn't match current Masternode: infoMixingMasternode=%s  addr=%s\n", infoMixingMasternode.addr.ToString(), pfrom->addr.ToString());
+        if(!infoMixingMazanode.fInfoValid) return;
+        if(infoMixingMazanode.addr != pfrom->addr) {
+            LogPrint("privatesend", "DSCOMPLETE -- message doesn't match current Mazanode: infoMixingMazanode=%s  addr=%s\n", infoMixingMazanode.addr.ToString(), pfrom->addr.ToString());
             return;
         }
 
@@ -213,7 +213,7 @@ void CPrivateSendClient::ResetPool()
 {
     nCachedLastSuccessBlock = 0;
     txMyCollateral = CMutableTransaction();
-    vecMasternodesUsed.clear();
+    vecMazanodesUsed.clear();
     UnlockCoins();
     keyHolderStorage.ReturnAll();
     SetNull();
@@ -224,7 +224,7 @@ void CPrivateSendClient::SetNull()
     // Client side
     nEntriesCount = 0;
     fLastEntryAccepted = false;
-    infoMixingMasternode = masternode_info_t();
+    infoMixingMazanode = mazanode_info_t();
     pendingDsaRequest = CPendingDsaRequest();
 
     CPrivateSendBase::SetNull();
@@ -252,7 +252,7 @@ std::string CPrivateSendClient::GetStatus()
     nStatusMessageProgress += 10;
     std::string strSuffix = "";
 
-    if(WaitForAnotherBlock() || !masternodeSync.IsBlockchainSynced())
+    if(WaitForAnotherBlock() || !mazanodeSync.IsBlockchainSynced())
         return strAutoDenomResult;
 
     switch(nState) {
@@ -262,7 +262,7 @@ std::string CPrivateSendClient::GetStatus()
             if(     nStatusMessageProgress % 70 <= 30) strSuffix = ".";
             else if(nStatusMessageProgress % 70 <= 50) strSuffix = "..";
             else if(nStatusMessageProgress % 70 <= 70) strSuffix = "...";
-            return strprintf(_("Submitted to masternode, waiting in queue %s"), strSuffix);;
+            return strprintf(_("Submitted to mazanode, waiting in queue %s"), strSuffix);;
         case POOL_STATE_ACCEPTING_ENTRIES:
             if(nEntriesCount == 0) {
                 nStatusMessageProgress = 0;
@@ -274,11 +274,11 @@ std::string CPrivateSendClient::GetStatus()
                 }
                 return _("PrivateSend request complete:") + " " + _("Your transaction was accepted into the pool!");
             } else {
-                if(     nStatusMessageProgress % 70 <= 40) return strprintf(_("Submitted following entries to masternode: %u / %d"), nEntriesCount, CPrivateSend::GetMaxPoolTransactions());
+                if(     nStatusMessageProgress % 70 <= 40) return strprintf(_("Submitted following entries to mazanode: %u / %d"), nEntriesCount, CPrivateSend::GetMaxPoolTransactions());
                 else if(nStatusMessageProgress % 70 <= 50) strSuffix = ".";
                 else if(nStatusMessageProgress % 70 <= 60) strSuffix = "..";
                 else if(nStatusMessageProgress % 70 <= 70) strSuffix = "...";
-                return strprintf(_("Submitted to masternode, waiting for more entries ( %u / %d ) %s"), nEntriesCount, CPrivateSend::GetMaxPoolTransactions(), strSuffix);
+                return strprintf(_("Submitted to mazanode, waiting for more entries ( %u / %d ) %s"), nEntriesCount, CPrivateSend::GetMaxPoolTransactions(), strSuffix);
             }
         case POOL_STATE_SIGNING:
             if(     nStatusMessageProgress % 70 <= 40) return _("Found enough users, signing ...");
@@ -295,19 +295,19 @@ std::string CPrivateSendClient::GetStatus()
     }
 }
 
-bool CPrivateSendClient::GetMixingMasternodeInfo(masternode_info_t& mnInfoRet)
+bool CPrivateSendClient::GetMixingMazanodeInfo(mazanode_info_t& mnInfoRet)
 {
-    mnInfoRet = infoMixingMasternode.fInfoValid ? infoMixingMasternode : masternode_info_t();
-    return infoMixingMasternode.fInfoValid;
+    mnInfoRet = infoMixingMazanode.fInfoValid ? infoMixingMazanode : mazanode_info_t();
+    return infoMixingMazanode.fInfoValid;
 }
 
-bool CPrivateSendClient::IsMixingMasternode(const CNode* pnode)
+bool CPrivateSendClient::IsMixingMazanode(const CNode* pnode)
 {
-    return infoMixingMasternode.fInfoValid && pnode->addr == infoMixingMasternode.addr;
+    return infoMixingMazanode.fInfoValid && pnode->addr == infoMixingMazanode.addr;
 }
 
 //
-// Check the mixing progress and send client updates if a Masternode
+// Check the mixing progress and send client updates if a Mazanode
 //
 void CPrivateSendClient::CheckPool()
 {
@@ -329,7 +329,7 @@ void CPrivateSendClient::CheckPool()
 //
 void CPrivateSendClient::CheckTimeout()
 {
-    if(fMasternodeMode) return;
+    if(fMazanodeMode) return;
 
     CheckQueue();
 
@@ -365,13 +365,13 @@ void CPrivateSendClient::CheckTimeout()
 }
 
 //
-// Execute a mixing denomination via a Masternode.
+// Execute a mixing denomination via a Mazanode.
 // This is only ran from clients
 //
 bool CPrivateSendClient::SendDenominate(const std::vector<CTxDSIn>& vecTxDSIn, const std::vector<CTxOut>& vecTxOut, CConnman& connman)
 {
-    if(fMasternodeMode) {
-        LogPrintf("CPrivateSendClient::SendDenominate -- PrivateSend from a Masternode is not supported currently.\n");
+    if(fMazanodeMode) {
+        LogPrintf("CPrivateSendClient::SendDenominate -- PrivateSend from a Mazanode is not supported currently.\n");
         return false;
     }
 
@@ -387,9 +387,9 @@ bool CPrivateSendClient::SendDenominate(const std::vector<CTxDSIn>& vecTxDSIn, c
     for (const auto& txdsin : vecTxDSIn)
         vecOutPointLocked.push_back(txdsin.prevout);
 
-    // we should already be connected to a Masternode
+    // we should already be connected to a Mazanode
     if(!nSessionID) {
-        LogPrintf("CPrivateSendClient::SendDenominate -- No Masternode has been selected yet.\n");
+        LogPrintf("CPrivateSendClient::SendDenominate -- No Mazanode has been selected yet.\n");
         UnlockCoins();
         keyHolderStorage.ReturnAll();
         SetNull();
@@ -437,19 +437,19 @@ bool CPrivateSendClient::SendDenominate(const std::vector<CTxDSIn>& vecTxDSIn, c
     return true;
 }
 
-// Incoming message from Masternode updating the progress of mixing
+// Incoming message from Mazanode updating the progress of mixing
 bool CPrivateSendClient::CheckPoolStateUpdate(PoolState nStateNew, int nEntriesCountNew, PoolStatusUpdate nStatusUpdate, PoolMessage nMessageID, int nSessionIDNew)
 {
-    if(fMasternodeMode) return false;
+    if(fMazanodeMode) return false;
 
     // do not update state when mixing client state is one of these
     if(nState == POOL_STATE_IDLE || nState == POOL_STATE_ERROR || nState == POOL_STATE_SUCCESS) return false;
 
-    strAutoDenomResult = _("Masternode:") + " " + CPrivateSend::GetMessageByID(nMessageID);
+    strAutoDenomResult = _("Mazanode:") + " " + CPrivateSend::GetMessageByID(nMessageID);
 
     // if rejected at any state
     if(nStatusUpdate == STATUS_REJECTED) {
-        LogPrintf("CPrivateSendClient::CheckPoolStateUpdate -- entry is rejected by Masternode\n");
+        LogPrintf("CPrivateSendClient::CheckPoolStateUpdate -- entry is rejected by Mazanode\n");
         UnlockCoins();
         keyHolderStorage.ReturnAll();
         SetNull();
@@ -480,13 +480,13 @@ bool CPrivateSendClient::CheckPoolStateUpdate(PoolState nStateNew, int nEntriesC
 }
 
 //
-// After we receive the finalized transaction from the Masternode, we must
+// After we receive the finalized transaction from the Mazanode, we must
 // check it to make sure it's what we want, then sign it if we agree.
 // If we refuse to sign, it's possible we'll be charged collateral
 //
 bool CPrivateSendClient::SignFinalTransaction(const CTransaction& finalTransactionNew, CNode* pnode, CConnman& connman)
 {
-    if(fMasternodeMode || pnode == NULL) return false;
+    if(fMazanodeMode || pnode == NULL) return false;
 
     finalMutableTransaction = finalTransactionNew;
     LogPrintf("CPrivateSendClient::SignFinalTransaction -- finalMutableTransaction=%s", finalMutableTransaction.ToString());
@@ -496,7 +496,7 @@ bool CPrivateSendClient::SignFinalTransaction(const CTransaction& finalTransacti
     sort(finalMutableTransaction.vout.begin(), finalMutableTransaction.vout.end(), CompareOutputBIP69());
 
     if(finalMutableTransaction.GetHash() != finalTransactionNew.GetHash()) {
-        LogPrintf("CPrivateSendClient::SignFinalTransaction -- WARNING! Masternode %s is not BIP69 compliant!\n", infoMixingMasternode.outpoint.ToStringShort());
+        LogPrintf("CPrivateSendClient::SignFinalTransaction -- WARNING! Mazanode %s is not BIP69 compliant!\n", infoMixingMazanode.outpoint.ToStringShort());
         UnlockCoins();
         keyHolderStorage.ReturnAll();
         SetNull();
@@ -573,8 +573,8 @@ bool CPrivateSendClient::SignFinalTransaction(const CTransaction& finalTransacti
         return false;
     }
 
-    // push all of our signatures to the Masternode
-    LogPrintf("CPrivateSendClient::SignFinalTransaction -- pushing sigs to the masternode, finalMutableTransaction=%s", finalMutableTransaction.ToString());
+    // push all of our signatures to the Mazanode
+    LogPrintf("CPrivateSendClient::SignFinalTransaction -- pushing sigs to the mazanode, finalMutableTransaction=%s", finalMutableTransaction.ToString());
     CNetMsgMaker msgMaker(pnode->GetSendVersion());
     connman.PushMessage(pnode, msgMaker.Make(NetMsgType::DSSIGNFINALTX, sigs));
     SetState(POOL_STATE_SIGNING);
@@ -586,7 +586,7 @@ bool CPrivateSendClient::SignFinalTransaction(const CTransaction& finalTransacti
 // mixing transaction was completed (failed or successful)
 void CPrivateSendClient::CompletedTransaction(PoolMessage nMessageID)
 {
-    if(fMasternodeMode) return;
+    if(fMazanodeMode) return;
 
     if(nMessageID == MSG_SUCCESS) {
         LogPrintf("CompletedTransaction -- success\n");
@@ -608,7 +608,7 @@ bool CPrivateSendClient::IsDenomSkipped(CAmount nDenomValue)
 
 bool CPrivateSendClient::WaitForAnotherBlock()
 {
-    if(!masternodeSync.IsMasternodeListSynced())
+    if(!mazanodeSync.IsMazanodeListSynced())
         return true;
 
     if(fPrivateSendMultiSession)
@@ -687,12 +687,12 @@ bool CPrivateSendClient::CheckAutomaticBackup()
 //
 bool CPrivateSendClient::DoAutomaticDenominating(CConnman& connman, bool fDryRun)
 {
-    if(fMasternodeMode) return false; // no client-side mixing on masternodes
+    if(fMazanodeMode) return false; // no client-side mixing on mazanodes
     if(!fEnablePrivateSend) return false;
     if(!pwalletMain || pwalletMain->IsLocked(true)) return false;
     if(nState != POOL_STATE_IDLE) return false;
 
-    if(!masternodeSync.IsMasternodeListSynced()) {
+    if(!mazanodeSync.IsMazanodeListSynced()) {
         strAutoDenomResult = _("Can't mix while sync in progress.");
         return false;
     }
@@ -723,8 +723,8 @@ bool CPrivateSendClient::DoAutomaticDenominating(CConnman& connman, bool fDryRun
     }
 
     if(mnodeman.size() == 0) {
-        LogPrint("privatesend", "CPrivateSendClient::DoAutomaticDenominating -- No Masternodes detected\n");
-        strAutoDenomResult = _("No Masternodes detected.");
+        LogPrint("privatesend", "CPrivateSendClient::DoAutomaticDenominating -- No Mazanodes detected\n");
+        strAutoDenomResult = _("No Mazanodes detected.");
         return false;
     }
 
@@ -778,7 +778,7 @@ bool CPrivateSendClient::DoAutomaticDenominating(CConnman& connman, bool fDryRun
         return false;
     }
 
-    // Initial phase, find a Masternode
+    // Initial phase, find a Mazanode
     // Clean if there is anything left from previous session
     UnlockCoins();
     keyHolderStorage.ReturnAll();
@@ -810,14 +810,14 @@ bool CPrivateSendClient::DoAutomaticDenominating(CConnman& connman, bool fDryRun
 
     int nMnCountEnabled = mnodeman.CountEnabled(MIN_PRIVATESEND_PEER_PROTO_VERSION);
 
-    // If we've used 90% of the Masternode list then drop the oldest first ~30%
+    // If we've used 90% of the Mazanode list then drop the oldest first ~30%
     int nThreshold_high = nMnCountEnabled * 0.9;
     int nThreshold_low = nThreshold_high * 0.7;
-    LogPrint("privatesend", "Checking vecMasternodesUsed: size: %d, threshold: %d\n", (int)vecMasternodesUsed.size(), nThreshold_high);
+    LogPrint("privatesend", "Checking vecMazanodesUsed: size: %d, threshold: %d\n", (int)vecMazanodesUsed.size(), nThreshold_high);
 
-    if((int)vecMasternodesUsed.size() > nThreshold_high) {
-        vecMasternodesUsed.erase(vecMasternodesUsed.begin(), vecMasternodesUsed.begin() + vecMasternodesUsed.size() - nThreshold_low);
-        LogPrint("privatesend", "  vecMasternodesUsed: new size: %d, threshold: %d\n", (int)vecMasternodesUsed.size(), nThreshold_high);
+    if((int)vecMazanodesUsed.size() > nThreshold_high) {
+        vecMazanodesUsed.erase(vecMazanodesUsed.begin(), vecMazanodesUsed.begin() + vecMazanodesUsed.size() - nThreshold_low);
+        LogPrint("privatesend", "  vecMazanodesUsed: new size: %d, threshold: %d\n", (int)vecMazanodesUsed.size(), nThreshold_high);
     }
 
     bool fUseQueue = GetRandInt(100) > 33;
@@ -831,7 +831,7 @@ bool CPrivateSendClient::DoAutomaticDenominating(CConnman& connman, bool fDryRun
     if(StartNewQueue(nValueMin, nBalanceNeedsAnonymized, connman))
         return true;
 
-    strAutoDenomResult = _("No compatible Masternode found.");
+    strAutoDenomResult = _("No compatible Mazanode found.");
     return false;
 }
 
@@ -846,10 +846,10 @@ bool CPrivateSendClient::JoinExistingQueue(CAmount nBalanceNeedsAnonymized, CCon
 
         if(dsq.IsExpired()) continue;
 
-        masternode_info_t infoMn;
+        mazanode_info_t infoMn;
 
-        if(!mnodeman.GetMasternodeInfo(dsq.masternodeOutpoint, infoMn)) {
-            LogPrintf("CPrivateSendClient::JoinExistingQueue -- dsq masternode is not in masternode list, masternode=%s\n", dsq.masternodeOutpoint.ToStringShort());
+        if(!mnodeman.GetMazanodeInfo(dsq.mazanodeOutpoint, infoMn)) {
+            LogPrintf("CPrivateSendClient::JoinExistingQueue -- dsq mazanode is not in mazanode list, mazanode=%s\n", dsq.mazanodeOutpoint.ToStringShort());
             continue;
         }
 
@@ -857,7 +857,7 @@ bool CPrivateSendClient::JoinExistingQueue(CAmount nBalanceNeedsAnonymized, CCon
 
         // skip next mn payments winners
         if (mnpayments.IsScheduled(infoMn, 0)) {
-            LogPrintf("CPrivateSendClient::JoinExistingQueue -- skipping winner, masternode=%s\n", infoMn.outpoint.ToStringShort());
+            LogPrintf("CPrivateSendClient::JoinExistingQueue -- skipping winner, mazanode=%s\n", infoMn.outpoint.ToStringShort());
             continue;
         }
 
@@ -891,18 +891,18 @@ bool CPrivateSendClient::JoinExistingQueue(CAmount nBalanceNeedsAnonymized, CCon
             continue;
         }
 
-        vecMasternodesUsed.push_back(dsq.masternodeOutpoint);
+        vecMazanodesUsed.push_back(dsq.mazanodeOutpoint);
 
-        if (connman.IsMasternodeOrDisconnectRequested(infoMn.addr)) {
-            LogPrintf("CPrivateSendClient::JoinExistingQueue -- skipping masternode connection, addr=%s\n", infoMn.addr.ToString());
+        if (connman.IsMazanodeOrDisconnectRequested(infoMn.addr)) {
+            LogPrintf("CPrivateSendClient::JoinExistingQueue -- skipping mazanode connection, addr=%s\n", infoMn.addr.ToString());
             continue;
         }
 
         nSessionDenom = dsq.nDenom;
         nSessionInputCount = fNewAlgo ? dsq.nInputCount : 0;
-        infoMixingMasternode = infoMn;
+        infoMixingMazanode = infoMn;
         pendingDsaRequest = CPendingDsaRequest(infoMn.addr, CDarksendAccept(nSessionDenom, nSessionInputCount, txMyCollateral));
-        connman.AddPendingMasternode(infoMn.addr);
+        connman.AddPendingMazanode(infoMn.addr);
         // TODO: add new state POOL_STATE_CONNECTING and bump MIN_PRIVATESEND_PEER_PROTO_VERSION
         SetState(POOL_STATE_QUEUE);
         nTimeLastSuccessfulStep = GetTime();
@@ -932,39 +932,39 @@ bool CPrivateSendClient::StartNewQueue(CAmount nValueMin, CAmount nBalanceNeedsA
 
     // otherwise, try one randomly
     while(nTries < 10) {
-        masternode_info_t infoMn = mnodeman.FindRandomNotInVec(vecMasternodesUsed, MIN_PRIVATESEND_PEER_PROTO_VERSION);
+        mazanode_info_t infoMn = mnodeman.FindRandomNotInVec(vecMazanodesUsed, MIN_PRIVATESEND_PEER_PROTO_VERSION);
 
         if(!infoMn.fInfoValid) {
-            LogPrintf("CPrivateSendClient::StartNewQueue -- Can't find random masternode!\n");
-            strAutoDenomResult = _("Can't find random Masternode.");
+            LogPrintf("CPrivateSendClient::StartNewQueue -- Can't find random mazanode!\n");
+            strAutoDenomResult = _("Can't find random Mazanode.");
             return false;
         }
 
         // skip next mn payments winners
         if (mnpayments.IsScheduled(infoMn, 0)) {
-            LogPrintf("CPrivateSendClient::StartNewQueue -- skipping winner, masternode=%s\n", infoMn.outpoint.ToStringShort());
+            LogPrintf("CPrivateSendClient::StartNewQueue -- skipping winner, mazanode=%s\n", infoMn.outpoint.ToStringShort());
             nTries++;
             continue;
         }
 
-        vecMasternodesUsed.push_back(infoMn.outpoint);
+        vecMazanodesUsed.push_back(infoMn.outpoint);
 
         if(infoMn.nLastDsq != 0 && infoMn.nLastDsq + nMnCountEnabled/5 > mnodeman.nDsqCount) {
-            LogPrintf("CPrivateSendClient::StartNewQueue -- Too early to mix on this masternode!"
-                        " masternode=%s  addr=%s  nLastDsq=%d  CountEnabled/5=%d  nDsqCount=%d\n",
+            LogPrintf("CPrivateSendClient::StartNewQueue -- Too early to mix on this mazanode!"
+                        " mazanode=%s  addr=%s  nLastDsq=%d  CountEnabled/5=%d  nDsqCount=%d\n",
                         infoMn.outpoint.ToStringShort(), infoMn.addr.ToString(), infoMn.nLastDsq,
                         nMnCountEnabled/5, mnodeman.nDsqCount);
             nTries++;
             continue;
         }
 
-        if (connman.IsMasternodeOrDisconnectRequested(infoMn.addr)) {
-            LogPrintf("CPrivateSendClient::StartNewQueue -- skipping masternode connection, addr=%s\n", infoMn.addr.ToString());
+        if (connman.IsMazanodeOrDisconnectRequested(infoMn.addr)) {
+            LogPrintf("CPrivateSendClient::StartNewQueue -- skipping mazanode connection, addr=%s\n", infoMn.addr.ToString());
             nTries++;
             continue;
         }
 
-        LogPrintf("CPrivateSendClient::StartNewQueue -- attempt %d connection to Masternode %s\n", nTries, infoMn.addr.ToString());
+        LogPrintf("CPrivateSendClient::StartNewQueue -- attempt %d connection to Mazanode %s\n", nTries, infoMn.addr.ToString());
 
         std::vector<CAmount> vecAmounts;
         pwalletMain->ConvertList(vecTxIn, vecAmounts);
@@ -996,8 +996,8 @@ bool CPrivateSendClient::StartNewQueue(CAmount nValueMin, CAmount nBalanceNeedsA
         nSessionInputCount = fNewAlgo
                 ? std::min(vecTxDSInTmp.size(), size_t(5 + GetRand(PRIVATESEND_ENTRY_MAX_SIZE - 5 + 1)))
                 : 0;
-        infoMixingMasternode = infoMn;
-        connman.AddPendingMasternode(infoMn.addr);
+        infoMixingMazanode = infoMn;
+        connman.AddPendingMazanode(infoMn.addr);
         pendingDsaRequest = CPendingDsaRequest(infoMn.addr, CDarksendAccept(nSessionDenom, nSessionInputCount, txMyCollateral));
         // TODO: add new state POOL_STATE_CONNECTING and bump MIN_PRIVATESEND_PEER_PROTO_VERSION
         SetState(POOL_STATE_QUEUE);
@@ -1425,9 +1425,9 @@ bool CPrivateSendClient::CreateDenominated(const CompactTallyItem& tallyItem, bo
 
 void CPrivateSendClient::RelayIn(const CDarkSendEntry& entry, CConnman& connman)
 {
-    if(!infoMixingMasternode.fInfoValid) return;
+    if(!infoMixingMazanode.fInfoValid) return;
 
-    connman.ForNode(infoMixingMasternode.addr, [&entry, &connman](CNode* pnode) {
+    connman.ForNode(infoMixingMazanode.addr, [&entry, &connman](CNode* pnode) {
         LogPrintf("CPrivateSendClient::RelayIn -- found master, relaying message to %s\n", pnode->addr.ToString());
         CNetMsgMaker msgMaker(pnode->GetSendVersion());
         connman.PushMessage(pnode, msgMaker.Make(NetMsgType::DSVIN, entry));
@@ -1451,15 +1451,15 @@ void CPrivateSendClient::UpdatedBlockTip(const CBlockIndex *pindex)
 //TODO: Rename/move to core
 void ThreadCheckPrivateSendClient(CConnman& connman)
 {
-    if(fLiteMode) return; // disable all Dash specific functionality
-    if(fMasternodeMode) return; // no client-side mixing on masternodes
+    if(fLiteMode) return; // disable all Maza specific functionality
+    if(fMazanodeMode) return; // no client-side mixing on mazanodes
 
     static bool fOneThread;
     if(fOneThread) return;
     fOneThread = true;
 
     // Make this thread recognisable as the PrivateSend thread
-    RenameThread("dash-ps-client");
+    RenameThread("maza-ps-client");
 
     unsigned int nTick = 0;
     unsigned int nDoAutoNextRun = nTick + PRIVATESEND_AUTO_TIMEOUT_MIN;
@@ -1468,7 +1468,7 @@ void ThreadCheckPrivateSendClient(CConnman& connman)
     {
         MilliSleep(1000);
 
-        if(masternodeSync.IsBlockchainSynced() && !ShutdownRequested()) {
+        if(mazanodeSync.IsBlockchainSynced() && !ShutdownRequested()) {
             nTick++;
             privateSendClient.CheckTimeout();
             privateSendClient.ProcessPendingDsaRequest(connman);

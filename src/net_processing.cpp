@@ -34,9 +34,9 @@
 #include "spork.h"
 #include "governance.h"
 #include "instantx.h"
-#include "masternode-payments.h"
-#include "masternode-sync.h"
-#include "masternodeman.h"
+#include "mazanode-payments.h"
+#include "mazanode-sync.h"
+#include "mazanodeman.h"
 #ifdef ENABLE_WALLET
 #include "privatesend-client.h"
 #endif // ENABLE_WALLET
@@ -45,7 +45,7 @@
 #include <boost/thread.hpp>
 
 #if defined(NDEBUG)
-# error "Dash Core cannot be compiled without assertions."
+# error "Maza Network cannot be compiled without assertions."
 #endif
 
 std::atomic<int64_t> nTimeBestReceived(0); // Used only to inform the wallet of when we last received a block
@@ -914,7 +914,7 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
         return mapBlockIndex.count(inv.hash);
 
     /* 
-        Dash Related Inventory Messages
+        Maza Related Inventory Messages
 
         --
 
@@ -931,20 +931,20 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
     case MSG_SPORK:
         return mapSporks.count(inv.hash);
 
-    case MSG_MASTERNODE_PAYMENT_VOTE:
-        return mnpayments.mapMasternodePaymentVotes.count(inv.hash);
+    case MSG_MAZANODE_PAYMENT_VOTE:
+        return mnpayments.mapMazanodePaymentVotes.count(inv.hash);
 
-    case MSG_MASTERNODE_PAYMENT_BLOCK:
+    case MSG_MAZANODE_PAYMENT_BLOCK:
         {
             BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
-            return mi != mapBlockIndex.end() && mnpayments.mapMasternodeBlocks.find(mi->second->nHeight) != mnpayments.mapMasternodeBlocks.end();
+            return mi != mapBlockIndex.end() && mnpayments.mapMazanodeBlocks.find(mi->second->nHeight) != mnpayments.mapMazanodeBlocks.end();
         }
 
-    case MSG_MASTERNODE_ANNOUNCE:
-        return mnodeman.mapSeenMasternodeBroadcast.count(inv.hash) && !mnodeman.IsMnbRecoveryRequested(inv.hash);
+    case MSG_MAZANODE_ANNOUNCE:
+        return mnodeman.mapSeenMazanodeBroadcast.count(inv.hash) && !mnodeman.IsMnbRecoveryRequested(inv.hash);
 
-    case MSG_MASTERNODE_PING:
-        return mnodeman.mapSeenMasternodePing.count(inv.hash);
+    case MSG_MAZANODE_PING:
+        return mnodeman.mapSeenMazanodePing.count(inv.hash);
 
     case MSG_DSTX: {
         return static_cast<bool>(CPrivateSend::GetDSTX(inv.hash));
@@ -954,8 +954,8 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
     case MSG_GOVERNANCE_OBJECT_VOTE:
         return ! governance.ConfirmInventoryRequest(inv);
 
-    case MSG_MASTERNODE_VERIFY:
-        return mnodeman.mapSeenMasternodeVerification.count(inv.hash);
+    case MSG_MAZANODE_VERIFY:
+        return mnodeman.mapSeenMazanodeVerification.count(inv.hash);
     }
 
     // Don't know what it is, just say we already got one
@@ -1171,22 +1171,22 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                     }
                 }
 
-                if (!push && inv.type == MSG_MASTERNODE_PAYMENT_VOTE) {
+                if (!push && inv.type == MSG_MAZANODE_PAYMENT_VOTE) {
                     if(mnpayments.HasVerifiedPaymentVote(inv.hash)) {
-                        connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::MASTERNODEPAYMENTVOTE, mnpayments.mapMasternodePaymentVotes[inv.hash]));
+                        connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::MAZANODEPAYMENTVOTE, mnpayments.mapMazanodePaymentVotes[inv.hash]));
                         push = true;
                     }
                 }
 
-                if (!push && inv.type == MSG_MASTERNODE_PAYMENT_BLOCK) {
+                if (!push && inv.type == MSG_MAZANODE_PAYMENT_BLOCK) {
                     BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
-                    LOCK(cs_mapMasternodeBlocks);
-                    if (mi != mapBlockIndex.end() && mnpayments.mapMasternodeBlocks.count(mi->second->nHeight)) {
-                        BOOST_FOREACH(CMasternodePayee& payee, mnpayments.mapMasternodeBlocks[mi->second->nHeight].vecPayees) {
+                    LOCK(cs_mapMazanodeBlocks);
+                    if (mi != mapBlockIndex.end() && mnpayments.mapMazanodeBlocks.count(mi->second->nHeight)) {
+                        BOOST_FOREACH(CMazanodePayee& payee, mnpayments.mapMazanodeBlocks[mi->second->nHeight].vecPayees) {
                             std::vector<uint256> vecVoteHashes = payee.GetVoteHashes();
                             BOOST_FOREACH(uint256& hash, vecVoteHashes) {
                                 if(mnpayments.HasVerifiedPaymentVote(hash)) {
-                                    connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::MASTERNODEPAYMENTVOTE, mnpayments.mapMasternodePaymentVotes[hash]));
+                                    connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::MAZANODEPAYMENTVOTE, mnpayments.mapMazanodePaymentVotes[hash]));
                                 }
                             }
                         }
@@ -1194,16 +1194,16 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                     }
                 }
 
-                if (!push && inv.type == MSG_MASTERNODE_ANNOUNCE) {
-                    if(mnodeman.mapSeenMasternodeBroadcast.count(inv.hash)){
-                        connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::MNANNOUNCE, mnodeman.mapSeenMasternodeBroadcast[inv.hash].second));
+                if (!push && inv.type == MSG_MAZANODE_ANNOUNCE) {
+                    if(mnodeman.mapSeenMazanodeBroadcast.count(inv.hash)){
+                        connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::MNANNOUNCE, mnodeman.mapSeenMazanodeBroadcast[inv.hash].second));
                         push = true;
                     }
                 }
 
-                if (!push && inv.type == MSG_MASTERNODE_PING) {
-                    if(mnodeman.mapSeenMasternodePing.count(inv.hash)) {
-                        connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::MNPING, mnodeman.mapSeenMasternodePing[inv.hash]));
+                if (!push && inv.type == MSG_MAZANODE_PING) {
+                    if(mnodeman.mapSeenMazanodePing.count(inv.hash)) {
+                        connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::MNPING, mnodeman.mapSeenMazanodePing[inv.hash]));
                         push = true;
                     }
                 }
@@ -1253,9 +1253,9 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                     }
                 }
 
-                if (!push && inv.type == MSG_MASTERNODE_VERIFY) {
-                    if(mnodeman.mapSeenMasternodeVerification.count(inv.hash)) {
-                        connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::MNVERIFY, mnodeman.mapSeenMasternodeVerification[inv.hash]));
+                if (!push && inv.type == MSG_MAZANODE_VERIFY) {
+                    if(mnodeman.mapSeenMazanodeVerification.count(inv.hash)) {
+                        connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::MNVERIFY, mnodeman.mapSeenMazanodeVerification[inv.hash]));
                         push = true;
                     }
                 }
@@ -1959,28 +1959,28 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
                 return true; // not an error
             }
 
-            CMasternode mn;
+            CMazanode mn;
 
-            if(!mnodeman.Get(dstx.masternodeOutpoint, mn)) {
-                LogPrint("privatesend", "DSTX -- Can't find masternode %s to verify %s\n", dstx.masternodeOutpoint.ToStringShort(), hashTx.ToString());
+            if(!mnodeman.Get(dstx.mazanodeOutpoint, mn)) {
+                LogPrint("privatesend", "DSTX -- Can't find mazanode %s to verify %s\n", dstx.mazanodeOutpoint.ToStringShort(), hashTx.ToString());
                 return false;
             }
 
             if(!mn.fAllowMixingTx) {
-                LogPrint("privatesend", "DSTX -- Masternode %s is sending too many transactions %s\n", dstx.masternodeOutpoint.ToStringShort(), hashTx.ToString());
+                LogPrint("privatesend", "DSTX -- Mazanode %s is sending too many transactions %s\n", dstx.mazanodeOutpoint.ToStringShort(), hashTx.ToString());
                 return true;
                 // TODO: Not an error? Could it be that someone is relaying old DSTXes
                 // we have no idea about (e.g we were offline)? How to handle them?
             }
 
-            if(!dstx.CheckSignature(mn.pubKeyMasternode)) {
+            if(!dstx.CheckSignature(mn.pubKeyMazanode)) {
                 LogPrint("privatesend", "DSTX -- CheckSignature() failed for %s\n", hashTx.ToString());
                 return false;
             }
 
-            LogPrintf("DSTX -- Got Masternode transaction %s\n", hashTx.ToString());
+            LogPrintf("DSTX -- Got Mazanode transaction %s\n", hashTx.ToString());
             mempool.PrioritiseTransaction(hashTx, hashTx.ToString(), 1000, 0.1*COIN);
-            mnodeman.DisallowMixing(dstx.masternodeOutpoint);
+            mnodeman.DisallowMixing(dstx.mazanodeOutpoint);
         }
 
         LOCK(cs_main);
@@ -1995,7 +1995,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
         if (!AlreadyHave(inv) && AcceptToMemoryPool(mempool, state, ptx, true, &fMissingInputs, &lRemovedTxn)) {
             // Process custom txes, this changes AlreadyHave to "true"
             if (strCommand == NetMsgType::DSTX) {
-                LogPrintf("DSTX -- Masternode transaction accepted, txid=%s, peer=%d\n",
+                LogPrintf("DSTX -- Mazanode transaction accepted, txid=%s, peer=%d\n",
                         tx.GetHash().ToString(), pfrom->id);
                 CPrivateSend::AddDSTX(dstx);
             } else if (strCommand == NetMsgType::TXLOCKREQUEST) {
@@ -2840,7 +2840,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             mnpayments.ProcessMessage(pfrom, strCommand, vRecv, connman);
             instantsend.ProcessMessage(pfrom, strCommand, vRecv, connman);
             sporkManager.ProcessSpork(pfrom, strCommand, vRecv, connman);
-            masternodeSync.ProcessMessage(pfrom, strCommand, vRecv);
+            mazanodeSync.ProcessMessage(pfrom, strCommand, vRecv);
             governance.ProcessMessage(pfrom, strCommand, vRecv, connman);
         }
         else

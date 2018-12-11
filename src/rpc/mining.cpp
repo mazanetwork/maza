@@ -1,6 +1,6 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2014-2017 The Maza Network developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -25,8 +25,8 @@
 #include "validationinterface.h"
 
 #include "governance-classes.h"
-#include "masternode-payments.h"
-#include "masternode-sync.h"
+#include "mazanode-payments.h"
+#include "mazanode-sync.h"
 
 #include <memory>
 #include <stdint.h>
@@ -194,7 +194,7 @@ UniValue generatetoaddress(const JSONRPCRequest& request)
             "\nMine blocks immediately to a specified address (before the RPC call returns)\n"
             "\nArguments:\n"
             "1. nblocks      (numeric, required) How many blocks are generated immediately.\n"
-            "2. address      (string, required) The address to send the newly generated Dash to.\n"
+            "2. address      (string, required) The address to send the newly generated Maza to.\n"
             "3. maxtries     (numeric, optional) How many iterations to try (default = 1000000).\n"
             "\nResult:\n"
             "[ blockhashes ]     (array) hashes of blocks generated\n"
@@ -386,13 +386,13 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
             "  \"curtime\" : ttt,                  (numeric) current timestamp in seconds since epoch (Jan 1 1970 GMT)\n"
             "  \"bits\" : \"xxxxxxxx\",              (string) compressed target of next block\n"
             "  \"height\" : n                      (numeric) The height of the next block\n"
-            "  \"masternode\" : {                  (json object) required masternode payee that must be included in the next block\n"
+            "  \"mazanode\" : {                  (json object) required mazanode payee that must be included in the next block\n"
             "      \"payee\" : \"xxxx\",             (string) payee address\n"
             "      \"script\" : \"xxxx\",            (string) payee scriptPubKey\n"
             "      \"amount\": n                   (numeric) required amount to pay\n"
             "  },\n"
-            "  \"masternode_payments_started\" :  true|false, (boolean) true, if masternode payments started\n"
-            "  \"masternode_payments_enforced\" : true|false, (boolean) true, if masternode payments are enforced\n"
+            "  \"mazanode_payments_started\" :  true|false, (boolean) true, if mazanode payments started\n"
+            "  \"mazanode_payments_enforced\" : true|false, (boolean) true, if mazanode payments are enforced\n"
             "  \"superblock\" : [                  (array) required superblock payees that must be included in the next block\n"
             "      {\n"
             "         \"payee\" : \"xxxx\",          (string) payee address\n"
@@ -483,24 +483,24 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
 
     if (Params().MiningRequiresPeers()) {
         if (g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL) == 0)
-            throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Dash Core is not connected!");
+            throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Maza Network is not connected!");
 
         if (IsInitialBlockDownload())
-            throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Dash Core is downloading blocks...");
+            throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Maza Network is downloading blocks...");
     }
 
-    // when enforcement is on we need information about a masternode payee or otherwise our block is going to be orphaned by the network
+    // when enforcement is on we need information about a mazanode payee or otherwise our block is going to be orphaned by the network
     CScript payee;
-    if (sporkManager.IsSporkActive(SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT)
-        && !masternodeSync.IsWinnersListSynced()
+    if (sporkManager.IsSporkActive(SPORK_8_MAZANODE_PAYMENT_ENFORCEMENT)
+        && !mazanodeSync.IsWinnersListSynced()
         && !mnpayments.GetBlockPayee(chainActive.Height() + 1, payee))
-            throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Dash Core is downloading masternode winners...");
+            throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Maza Network is downloading mazanode winners...");
 
     // next bock is a superblock and we need governance info to correctly construct it
     if (sporkManager.IsSporkActive(SPORK_9_SUPERBLOCKS_ENABLED)
-        && !masternodeSync.IsSynced()
+        && !mazanodeSync.IsSynced()
         && CSuperblock::IsValidBlockHeight(chainActive.Height() + 1))
-            throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Dash Core is syncing with network...");
+            throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Maza Network is syncing with network...");
 
     static unsigned int nTransactionsUpdatedLast;
 
@@ -698,18 +698,18 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
     result.push_back(Pair("bits", strprintf("%08x", pblock->nBits)));
     result.push_back(Pair("height", (int64_t)(pindexPrev->nHeight+1)));
 
-    UniValue masternodeObj(UniValue::VOBJ);
-    if(pblock->txoutMasternode != CTxOut()) {
+    UniValue mazanodeObj(UniValue::VOBJ);
+    if(pblock->txoutMazanode != CTxOut()) {
         CTxDestination address1;
-        ExtractDestination(pblock->txoutMasternode.scriptPubKey, address1);
+        ExtractDestination(pblock->txoutMazanode.scriptPubKey, address1);
         CBitcoinAddress address2(address1);
-        masternodeObj.push_back(Pair("payee", address2.ToString().c_str()));
-        masternodeObj.push_back(Pair("script", HexStr(pblock->txoutMasternode.scriptPubKey)));
-        masternodeObj.push_back(Pair("amount", pblock->txoutMasternode.nValue));
+        mazanodeObj.push_back(Pair("payee", address2.ToString().c_str()));
+        mazanodeObj.push_back(Pair("script", HexStr(pblock->txoutMazanode.scriptPubKey)));
+        mazanodeObj.push_back(Pair("amount", pblock->txoutMazanode.nValue));
     }
-    result.push_back(Pair("masternode", masternodeObj));
-    result.push_back(Pair("masternode_payments_started", pindexPrev->nHeight + 1 > consensusParams.nMasternodePaymentsStartBlock));
-    result.push_back(Pair("masternode_payments_enforced", sporkManager.IsSporkActive(SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT)));
+    result.push_back(Pair("mazanode", mazanodeObj));
+    result.push_back(Pair("mazanode_payments_started", pindexPrev->nHeight + 1 > consensusParams.nMazanodePaymentsStartBlock));
+    result.push_back(Pair("mazanode_payments_enforced", sporkManager.IsSporkActive(SPORK_8_MAZANODE_PAYMENT_ENFORCEMENT)));
 
     UniValue superblockObjArray(UniValue::VARR);
     if(pblock->voutSuperblock.size()) {

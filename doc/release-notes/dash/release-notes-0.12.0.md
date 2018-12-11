@@ -2,13 +2,13 @@
 ====================
 
 
-Dash Core version 0.12.0 is now available from:
+Maza Network version 0.12.0 is now available from:
 
-  https://dashpay.io/downloads
+  https://mazacoin.io/downloads
 
 Please report bugs using the issue tracker at github:
 
-  https://github.com/dashpay/dash/issues
+  https://github.com/mazacoin/maza/issues
 
 
 How to Upgrade
@@ -16,8 +16,8 @@ How to Upgrade
 
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes for older versions), then run the
-installer (on Windows) or just copy over /Applications/Dash-Qt (on Mac) or
-dashd/dash-qt (on Linux).
+installer (on Windows) or just copy over /Applications/Maza-Qt (on Mac) or
+mazad/maza-qt (on Linux).
 
 **This new version uses transaction indexing by default, you will need to reindex 
 the blockchain. To do so, start the client with --reindex.**
@@ -28,7 +28,7 @@ Downgrade warning
 
 Because release 0.12.0 and later makes use of headers-first synchronization and
 parallel block download (see further), the block files and databases are not
-backwards-compatible with pre-0.12 versions of Dash Core or other software:
+backwards-compatible with pre-0.12 versions of Maza Network or other software:
 
 * Blocks will be stored on disk out of order (in the order they are
 received, really), which makes it incompatible with some tools or
@@ -53,11 +53,11 @@ This does not affect wallet forward or backward compatibility.
 Switched to Bitcoin Core version 0.10 - https://bitcoin.org/en/release/v0.10.0
 - Implemented decentralized budget system 
 - Removed reference node
-- Implemented new decentralized masternode payment consensus system
+- Implemented new decentralized mazanode payment consensus system
 - Improved speed of DS
-- New masternode payment/winners/budgets syncing strategy
-- Platform independent masternode ranking system
-- Masternode broadcasts, pings and winners now use the inventory system
+- New mazanode payment/winners/budgets syncing strategy
+- Platform independent mazanode ranking system
+- Mazanode broadcasts, pings and winners now use the inventory system
 - Transaction indexing is enabled by default for all clients
 - Better implementation of IX block reprocessing to find and remove an invalid block
 - IX nearly 100% successful with new implementation
@@ -100,4 +100,4 @@ AlexMomo
 snogcel
 bertlebbert
 
-As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/dash/).
+As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/maza/).

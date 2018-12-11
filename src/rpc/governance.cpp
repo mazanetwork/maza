@@ -1,10 +1,10 @@
-// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2014-2017 The Maza Network developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-//#define ENABLE_DASH_DEBUG
+//#define ENABLE_MAZA_DEBUG
 
-#include "activemasternode.h"
+#include "activemazanode.h"
 #include "consensus/validation.h"
 #include "governance.h"
 #include "governance-vote.h"
@@ -12,10 +12,10 @@
 #include "governance-validators.h"
 #include "init.h"
 #include "validation.h"
-#include "masternode.h"
-#include "masternode-sync.h"
-#include "masternodeconfig.h"
-#include "masternodeman.h"
+#include "mazanode.h"
+#include "mazanode-sync.h"
+#include "mazanodeconfig.h"
+#include "mazanodeman.h"
 #include "messagesigner.h"
 #include "rpc/server.h"
 #include "util.h"
@@ -56,9 +56,9 @@ UniValue gobject(const JSONRPCRequest& request)
                 "  getcurrentvotes    - Get only current (tallying) votes for a governance object hash (does not include old votes)\n"
                 "  list               - List governance objects (can be filtered by signal and/or object type)\n"
                 "  diff               - List differences since last diff\n"
-                "  vote-alias         - Vote on a governance object by masternode alias (using masternode.conf setup)\n"
-                "  vote-conf          - Vote on a governance object by masternode configured in dash.conf\n"
-                "  vote-many          - Vote on a governance object by all masternodes (using masternode.conf setup)\n"
+                "  vote-alias         - Vote on a governance object by mazanode alias (using mazanode.conf setup)\n"
+                "  vote-conf          - Vote on a governance object by mazanode configured in maza.conf\n"
+                "  vote-many          - Vote on a governance object by all mazanodes (using mazanode.conf setup)\n"
                 );
 
 
@@ -174,7 +174,7 @@ UniValue gobject(const JSONRPCRequest& request)
         }
 
         if(govobj.GetObjectType() == GOVERNANCE_OBJECT_TRIGGER) {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Trigger objects need not be prepared (however only masternodes can create them)");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Trigger objects need not be prepared (however only mazanodes can create them)");
         }
 
         if(govobj.GetObjectType() == GOVERNANCE_OBJECT_WATCHDOG) {
@@ -219,14 +219,14 @@ UniValue gobject(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'gobject submit <parent-hash> <revision> <time> <data-hex> <fee-txid>'");
         }
 
-        if(!masternodeSync.IsBlockchainSynced()) {
-            throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Must wait for client to sync with masternode network. Try again in a minute or so.");
+        if(!mazanodeSync.IsBlockchainSynced()) {
+            throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Must wait for client to sync with mazanode network. Try again in a minute or so.");
         }
 
-        bool fMnFound = mnodeman.Has(activeMasternode.outpoint);
+        bool fMnFound = mnodeman.Has(activeMazanode.outpoint);
 
-        DBG( std::cout << "gobject: submit activeMasternode.pubKeyMasternode = " << activeMasternode.pubKeyMasternode.GetHash().ToString()
-             << ", outpoint = " << activeMasternode.outpoint.ToStringShort()
+        DBG( std::cout << "gobject: submit activeMazanode.pubKeyMazanode = " << activeMazanode.pubKeyMazanode.GetHash().ToString()
+             << ", outpoint = " << activeMazanode.outpoint.ToStringShort()
              << ", params.size() = " << request.params.size()
              << ", fMnFound = " << fMnFound << std::endl; );
 
@@ -274,12 +274,12 @@ UniValue gobject(const JSONRPCRequest& request)
         // Attempt to sign triggers if we are a MN
         if(govobj.GetObjectType() == GOVERNANCE_OBJECT_TRIGGER) {
             if(fMnFound) {
-                govobj.SetMasternodeOutpoint(activeMasternode.outpoint);
-                govobj.Sign(activeMasternode.keyMasternode, activeMasternode.pubKeyMasternode);
+                govobj.SetMazanodeOutpoint(activeMazanode.outpoint);
+                govobj.Sign(activeMazanode.keyMazanode, activeMazanode.pubKeyMazanode);
             }
             else {
-                LogPrintf("gobject(submit) -- Object submission rejected because node is not a masternode\n");
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "Only valid masternodes can submit this type of object");
+                LogPrintf("gobject(submit) -- Object submission rejected because node is not a mazanode\n");
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Only valid mazanodes can submit this type of object");
             }
         }
         else {
@@ -292,11 +292,11 @@ UniValue gobject(const JSONRPCRequest& request)
         std::string strHash = govobj.GetHash().ToString();
 
         std::string strError = "";
-        bool fMissingMasternode;
+        bool fMissingMazanode;
         bool fMissingConfirmations;
         {
             LOCK(cs_main);
-            if(!govobj.IsValidLocally(strError, fMissingMasternode, fMissingConfirmations, true) && !fMissingConfirmations) {
+            if(!govobj.IsValidLocally(strError, fMissingMazanode, fMissingConfirmations, true) && !fMissingConfirmations) {
                 LogPrintf("gobject(submit) -- Object submission rejected because object is not valid - hash = %s, strError = %s\n", strHash, strError);
                 throw JSONRPCError(RPC_INTERNAL_ERROR, "Governance object is not valid - " + strHash + " - " + strError);
             }
@@ -304,7 +304,7 @@ UniValue gobject(const JSONRPCRequest& request)
 
         // RELAY THIS OBJECT
         // Reject if rate check fails but don't update buffer
-        if(!governance.MasternodeRateCheck(govobj)) {
+        if(!governance.MazanodeRateCheck(govobj)) {
             LogPrintf("gobject(submit) -- Object submission rejected because of rate check failure - hash = %s\n", strHash);
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Object creation rate limit exceeded");
         }
@@ -350,31 +350,31 @@ UniValue gobject(const JSONRPCRequest& request)
 
         UniValue resultsObj(UniValue::VOBJ);
 
-        std::vector<unsigned char> vchMasterNodeSignature;
-        std::string strMasterNodeSignMessage;
+        std::vector<unsigned char> vchMazaNodeSignature;
+        std::string strMazaNodeSignMessage;
 
         UniValue statusObj(UniValue::VOBJ);
         UniValue returnObj(UniValue::VOBJ);
 
-        CMasternode mn;
-        bool fMnFound = mnodeman.Get(activeMasternode.outpoint, mn);
+        CMazanode mn;
+        bool fMnFound = mnodeman.Get(activeMazanode.outpoint, mn);
 
         if(!fMnFound) {
             nFailed++;
             statusObj.push_back(Pair("result", "failed"));
-            statusObj.push_back(Pair("errorMessage", "Can't find masternode by collateral output"));
-            resultsObj.push_back(Pair("dash.conf", statusObj));
+            statusObj.push_back(Pair("errorMessage", "Can't find mazanode by collateral output"));
+            resultsObj.push_back(Pair("maza.conf", statusObj));
             returnObj.push_back(Pair("overall", strprintf("Voted successfully %d time(s) and failed %d time(s).", nSuccessful, nFailed)));
             returnObj.push_back(Pair("detail", resultsObj));
             return returnObj;
         }
 
         CGovernanceVote vote(mn.outpoint, hash, eVoteSignal, eVoteOutcome);
-        if(!vote.Sign(activeMasternode.keyMasternode, activeMasternode.pubKeyMasternode)) {
+        if(!vote.Sign(activeMazanode.keyMazanode, activeMazanode.pubKeyMazanode)) {
             nFailed++;
             statusObj.push_back(Pair("result", "failed"));
             statusObj.push_back(Pair("errorMessage", "Failure to sign."));
-            resultsObj.push_back(Pair("dash.conf", statusObj));
+            resultsObj.push_back(Pair("maza.conf", statusObj));
             returnObj.push_back(Pair("overall", strprintf("Voted successfully %d time(s) and failed %d time(s).", nSuccessful, nFailed)));
             returnObj.push_back(Pair("detail", resultsObj));
             return returnObj;
@@ -391,7 +391,7 @@ UniValue gobject(const JSONRPCRequest& request)
             statusObj.push_back(Pair("errorMessage", exception.GetMessage()));
         }
 
-        resultsObj.push_back(Pair("dash.conf", statusObj));
+        resultsObj.push_back(Pair("maza.conf", statusObj));
 
         returnObj.push_back(Pair("overall", strprintf("Voted successfully %d time(s) and failed %d time(s).", nSuccessful, nFailed)));
         returnObj.push_back(Pair("detail", resultsObj));
@@ -429,22 +429,22 @@ UniValue gobject(const JSONRPCRequest& request)
 
         UniValue resultsObj(UniValue::VOBJ);
 
-        for (const auto& mne : masternodeConfig.getEntries()) {
+        for (const auto& mne : mazanodeConfig.getEntries()) {
             std::string strError;
-            std::vector<unsigned char> vchMasterNodeSignature;
-            std::string strMasterNodeSignMessage;
+            std::vector<unsigned char> vchMazaNodeSignature;
+            std::string strMazaNodeSignMessage;
 
             CPubKey pubKeyCollateralAddress;
             CKey keyCollateralAddress;
-            CPubKey pubKeyMasternode;
-            CKey keyMasternode;
+            CPubKey pubKeyMazanode;
+            CKey keyMazanode;
 
             UniValue statusObj(UniValue::VOBJ);
 
-            if(!CMessageSigner::GetKeysFromSecret(mne.getPrivKey(), keyMasternode, pubKeyMasternode)){
+            if(!CMessageSigner::GetKeysFromSecret(mne.getPrivKey(), keyMazanode, pubKeyMazanode)){
                 nFailed++;
                 statusObj.push_back(Pair("result", "failed"));
-                statusObj.push_back(Pair("errorMessage", "Masternode signing error, could not set key correctly"));
+                statusObj.push_back(Pair("errorMessage", "Mazanode signing error, could not set key correctly"));
                 resultsObj.push_back(Pair(mne.getAlias(), statusObj));
                 continue;
             }
@@ -459,19 +459,19 @@ UniValue gobject(const JSONRPCRequest& request)
 
             COutPoint outpoint(nTxHash, nOutputIndex);
 
-            CMasternode mn;
+            CMazanode mn;
             bool fMnFound = mnodeman.Get(outpoint, mn);
 
             if(!fMnFound) {
                 nFailed++;
                 statusObj.push_back(Pair("result", "failed"));
-                statusObj.push_back(Pair("errorMessage", "Can't find masternode by collateral output"));
+                statusObj.push_back(Pair("errorMessage", "Can't find mazanode by collateral output"));
                 resultsObj.push_back(Pair(mne.getAlias(), statusObj));
                 continue;
             }
 
             CGovernanceVote vote(mn.outpoint, hash, eVoteSignal, eVoteOutcome);
-            if(!vote.Sign(keyMasternode, pubKeyMasternode)){
+            if(!vote.Sign(keyMazanode, pubKeyMazanode)){
                 nFailed++;
                 statusObj.push_back(Pair("result", "failed"));
                 statusObj.push_back(Pair("errorMessage", "Failure to sign."));
@@ -501,7 +501,7 @@ UniValue gobject(const JSONRPCRequest& request)
     }
 
 
-    // MASTERNODES CAN VOTE ON GOVERNANCE OBJECTS ON THE NETWORK FOR VARIOUS SIGNALS AND OUTCOMES
+    // MAZANODES CAN VOTE ON GOVERNANCE OBJECTS ON THE NETWORK FOR VARIOUS SIGNALS AND OUTCOMES
     if(strCommand == "vote-alias")
     {
         if(request.params.size() != 5)
@@ -531,41 +531,41 @@ UniValue gobject(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid vote outcome. Please use one of the following: 'yes', 'no' or 'abstain'");
         }
 
-        // EXECUTE VOTE FOR EACH MASTERNODE, COUNT SUCCESSES VS FAILURES
+        // EXECUTE VOTE FOR EACH MAZANODE, COUNT SUCCESSES VS FAILURES
 
         int nSuccessful = 0;
         int nFailed = 0;
 
         UniValue resultsObj(UniValue::VOBJ);
 
-        for (const auto& mne : masternodeConfig.getEntries())
+        for (const auto& mne : mazanodeConfig.getEntries())
         {
             // IF WE HAVE A SPECIFIC NODE REQUESTED TO VOTE, DO THAT
             if(strAlias != mne.getAlias()) continue;
 
             // INIT OUR NEEDED VARIABLES TO EXECUTE THE VOTE
             std::string strError;
-            std::vector<unsigned char> vchMasterNodeSignature;
-            std::string strMasterNodeSignMessage;
+            std::vector<unsigned char> vchMazaNodeSignature;
+            std::string strMazaNodeSignMessage;
 
             CPubKey pubKeyCollateralAddress;
             CKey keyCollateralAddress;
-            CPubKey pubKeyMasternode;
-            CKey keyMasternode;
+            CPubKey pubKeyMazanode;
+            CKey keyMazanode;
 
-            // SETUP THE SIGNING KEY FROM MASTERNODE.CONF ENTRY
+            // SETUP THE SIGNING KEY FROM MAZANODE.CONF ENTRY
 
             UniValue statusObj(UniValue::VOBJ);
 
-            if(!CMessageSigner::GetKeysFromSecret(mne.getPrivKey(), keyMasternode, pubKeyMasternode)) {
+            if(!CMessageSigner::GetKeysFromSecret(mne.getPrivKey(), keyMazanode, pubKeyMazanode)) {
                 nFailed++;
                 statusObj.push_back(Pair("result", "failed"));
-                statusObj.push_back(Pair("errorMessage", strprintf("Invalid masternode key %s.", mne.getPrivKey())));
+                statusObj.push_back(Pair("errorMessage", strprintf("Invalid mazanode key %s.", mne.getPrivKey())));
                 resultsObj.push_back(Pair(mne.getAlias(), statusObj));
                 continue;
             }
 
-            // SEARCH FOR THIS MASTERNODE ON THE NETWORK, THE NODE MUST BE ACTIVE TO VOTE
+            // SEARCH FOR THIS MAZANODE ON THE NETWORK, THE NODE MUST BE ACTIVE TO VOTE
 
             uint256 nTxHash;
             nTxHash.SetHex(mne.getTxHash());
@@ -577,13 +577,13 @@ UniValue gobject(const JSONRPCRequest& request)
 
             COutPoint outpoint(nTxHash, nOutputIndex);
 
-            CMasternode mn;
+            CMazanode mn;
             bool fMnFound = mnodeman.Get(outpoint, mn);
 
             if(!fMnFound) {
                 nFailed++;
                 statusObj.push_back(Pair("result", "failed"));
-                statusObj.push_back(Pair("errorMessage", "Masternode must be publicly available on network to vote. Masternode not found."));
+                statusObj.push_back(Pair("errorMessage", "Mazanode must be publicly available on network to vote. Mazanode not found."));
                 resultsObj.push_back(Pair(mne.getAlias(), statusObj));
                 continue;
             }
@@ -591,7 +591,7 @@ UniValue gobject(const JSONRPCRequest& request)
             // CREATE NEW GOVERNANCE OBJECT VOTE WITH OUTCOME/SIGNAL
 
             CGovernanceVote vote(outpoint, hash, eVoteSignal, eVoteOutcome);
-            if(!vote.Sign(keyMasternode, pubKeyMasternode)) {
+            if(!vote.Sign(keyMazanode, pubKeyMazanode)) {
                 nFailed++;
                 statusObj.push_back(Pair("result", "failed"));
                 statusObj.push_back(Pair("errorMessage", "Failure to sign."));
@@ -677,9 +677,9 @@ UniValue gobject(const JSONRPCRequest& request)
             bObj.push_back(Pair("CollateralHash",  pGovObj->GetCollateralHash().ToString()));
             bObj.push_back(Pair("ObjectType", pGovObj->GetObjectType()));
             bObj.push_back(Pair("CreationTime", pGovObj->GetCreationTime()));
-            const COutPoint& masternodeOutpoint = pGovObj->GetMasternodeOutpoint();
-            if(masternodeOutpoint != COutPoint()) {
-                bObj.push_back(Pair("SigningMasternode", masternodeOutpoint.ToStringShort()));
+            const COutPoint& mazanodeOutpoint = pGovObj->GetMazanodeOutpoint();
+            if(mazanodeOutpoint != COutPoint()) {
+                bObj.push_back(Pair("SigningMazanode", mazanodeOutpoint.ToStringShort()));
             }
 
             // REPORT STATUS FOR FUNDING VOTES SPECIFICALLY
@@ -729,9 +729,9 @@ UniValue gobject(const JSONRPCRequest& request)
         objResult.push_back(Pair("CollateralHash",  pGovObj->GetCollateralHash().ToString()));
         objResult.push_back(Pair("ObjectType", pGovObj->GetObjectType()));
         objResult.push_back(Pair("CreationTime", pGovObj->GetCreationTime()));
-        const COutPoint& masternodeOutpoint = pGovObj->GetMasternodeOutpoint();
-        if(masternodeOutpoint != COutPoint()) {
-            objResult.push_back(Pair("SigningMasternode", masternodeOutpoint.ToStringShort()));
+        const COutPoint& mazanodeOutpoint = pGovObj->GetMazanodeOutpoint();
+        if(mazanodeOutpoint != COutPoint()) {
+            objResult.push_back(Pair("SigningMazanode", mazanodeOutpoint.ToStringShort()));
         }
 
         // SHOW (MUCH MORE) INFORMATION ABOUT VOTES FOR GOVERNANCE OBJECT (THAN LIST/DIFF ABOVE)
@@ -760,7 +760,7 @@ UniValue gobject(const JSONRPCRequest& request)
         objDelete.push_back(Pair("AbstainCount",  pGovObj->GetAbstainCount(VOTE_SIGNAL_DELETE)));
         objResult.push_back(Pair("DeleteResult", objDelete));
 
-        // -- ENDORSED VIA MASTERNODE-ELECTED BOARD
+        // -- ENDORSED VIA MAZANODE-ELECTED BOARD
         UniValue objEndorsed(UniValue::VOBJ);
         objEndorsed.push_back(Pair("AbsoluteYesCount",  pGovObj->GetAbsoluteYesCount(VOTE_SIGNAL_ENDORSED)));
         objEndorsed.push_back(Pair("YesCount",  pGovObj->GetYesCount(VOTE_SIGNAL_ENDORSED)));
@@ -829,7 +829,7 @@ UniValue gobject(const JSONRPCRequest& request)
 
         COutPoint mnCollateralOutpoint;
         if (request.params.size() == 4) {
-            uint256 txid = ParseHashV(request.params[2], "Masternode Collateral hash");
+            uint256 txid = ParseHashV(request.params[2], "Mazanode Collateral hash");
             std::string strVout = request.params[3].get_str();
             mnCollateralOutpoint = COutPoint(txid, (uint32_t)atoi(strVout));
         }
@@ -865,7 +865,7 @@ UniValue voteraw(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 7)
         throw std::runtime_error(
-                "voteraw <masternode-tx-hash> <masternode-tx-index> <governance-hash> <vote-signal> [yes|no|abstain] <time> <vote-sig>\n"
+                "voteraw <mazanode-tx-hash> <mazanode-tx-index> <governance-hash> <vote-signal> [yes|no|abstain] <time> <vote-sig>\n"
                 "Compile and relay a governance vote with provided external signature instead of signing vote internally\n"
                 );
 
@@ -898,11 +898,11 @@ UniValue voteraw(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Malformed base64 encoding");
     }
 
-    CMasternode mn;
+    CMazanode mn;
     bool fMnFound = mnodeman.Get(outpoint, mn);
 
     if(!fMnFound) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "Failure to find masternode in list : " + outpoint.ToStringShort());
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "Failure to find mazanode in list : " + outpoint.ToStringShort());
     }
 
     CGovernanceVote vote(outpoint, hashGovObj, eVoteSignal, eVoteOutcome);
@@ -931,7 +931,7 @@ UniValue getgovernanceinfo(const JSONRPCRequest& request)
             "\nResult:\n"
             "{\n"
             "  \"governanceminquorum\": xxxxx,           (numeric) the absolute minimum number of votes needed to trigger a governance action\n"
-            "  \"masternodewatchdogmaxseconds\": xxxxx,  (numeric) sentinel watchdog expiration time in seconds (DEPRECATED)\n"
+            "  \"mazanodewatchdogmaxseconds\": xxxxx,  (numeric) sentinel watchdog expiration time in seconds (DEPRECATED)\n"
             "  \"sentinelpingmaxseconds\": xxxxx,        (numeric) sentinel ping expiration time in seconds\n"
             "  \"proposalfee\": xxx.xx,                  (numeric) the collateral transaction fee which must be paid to create a proposal in " + CURRENCY_UNIT + "\n"
             "  \"superblockcycle\": xxxxx,               (numeric) the number of blocks between superblocks\n"
@@ -954,8 +954,8 @@ UniValue getgovernanceinfo(const JSONRPCRequest& request)
 
     UniValue obj(UniValue::VOBJ);
     obj.push_back(Pair("governanceminquorum", Params().GetConsensus().nGovernanceMinQuorum));
-    obj.push_back(Pair("masternodewatchdogmaxseconds", MASTERNODE_SENTINEL_PING_MAX_SECONDS));
-    obj.push_back(Pair("sentinelpingmaxseconds", MASTERNODE_SENTINEL_PING_MAX_SECONDS));
+    obj.push_back(Pair("mazanodewatchdogmaxseconds", MAZANODE_SENTINEL_PING_MAX_SECONDS));
+    obj.push_back(Pair("sentinelpingmaxseconds", MAZANODE_SENTINEL_PING_MAX_SECONDS));
     obj.push_back(Pair("proposalfee", ValueFromAmount(GOVERNANCE_PROPOSAL_FEE_TX)));
     obj.push_back(Pair("superblockcycle", Params().GetConsensus().nSuperblockCycle));
     obj.push_back(Pair("lastsuperblock", nLastSuperblock));
@@ -995,11 +995,11 @@ UniValue getsuperblockbudget(const JSONRPCRequest& request)
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         okSafe argNames
   //  --------------------- ------------------------  -----------------------  ------ ----------
-    /* Dash features */
-    { "dash",               "getgovernanceinfo",      &getgovernanceinfo,      true,  {} },
-    { "dash",               "getsuperblockbudget",    &getsuperblockbudget,    true,  {"index"} },
-    { "dash",               "gobject",                &gobject,                true,  {} },
-    { "dash",               "voteraw",                &voteraw,                true,  {} },
+    /* Maza features */
+    { "maza",               "getgovernanceinfo",      &getgovernanceinfo,      true,  {} },
+    { "maza",               "getsuperblockbudget",    &getsuperblockbudget,    true,  {"index"} },
+    { "maza",               "gobject",                &gobject,                true,  {} },
+    { "maza",               "voteraw",                &voteraw,                true,  {} },
 
 };
 

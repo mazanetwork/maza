@@ -1,11 +1,11 @@
-// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2014-2017 The Maza Network developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "governance-vote.h"
 #include "governance-object.h"
-#include "masternode-sync.h"
-#include "masternodeman.h"
+#include "mazanode-sync.h"
+#include "mazanodeman.h"
 #include "messagesigner.h"
 #include "util.h"
 
@@ -89,18 +89,18 @@ CGovernanceVote::CGovernanceVote()
     : fValid(true),
       fSynced(false),
       nVoteSignal(int(VOTE_SIGNAL_NONE)),
-      masternodeOutpoint(),
+      mazanodeOutpoint(),
       nParentHash(),
       nVoteOutcome(int(VOTE_OUTCOME_NONE)),
       nTime(0),
       vchSig()
 {}
 
-CGovernanceVote::CGovernanceVote(const COutPoint& outpointMasternodeIn, const uint256& nParentHashIn, vote_signal_enum_t eVoteSignalIn, vote_outcome_enum_t eVoteOutcomeIn)
+CGovernanceVote::CGovernanceVote(const COutPoint& outpointMazanodeIn, const uint256& nParentHashIn, vote_signal_enum_t eVoteSignalIn, vote_outcome_enum_t eVoteOutcomeIn)
     : fValid(true),
       fSynced(false),
       nVoteSignal(eVoteSignalIn),
-      masternodeOutpoint(outpointMasternodeIn),
+      mazanodeOutpoint(outpointMazanodeIn),
       nParentHash(nParentHashIn),
       nVoteOutcome(eVoteOutcomeIn),
       nTime(GetAdjustedTime()),
@@ -112,7 +112,7 @@ CGovernanceVote::CGovernanceVote(const COutPoint& outpointMasternodeIn, const ui
 std::string CGovernanceVote::ToString() const
 {
     std::ostringstream ostr;
-    ostr << masternodeOutpoint.ToStringShort() << ":"
+    ostr << mazanodeOutpoint.ToStringShort() << ":"
          << nTime << ":"
          << CGovernanceVoting::ConvertOutcomeToString(GetOutcome()) << ":"
          << CGovernanceVoting::ConvertSignalToString(GetSignal());
@@ -122,7 +122,7 @@ std::string CGovernanceVote::ToString() const
 void CGovernanceVote::Relay(CConnman& connman) const
 {
     // Do not relay until fully synced
-    if(!masternodeSync.IsSynced()) {
+    if(!mazanodeSync.IsSynced()) {
         LogPrint("gobject", "CGovernanceVote::Relay -- won't relay until fully synced\n");
         return;
     }
@@ -136,7 +136,7 @@ void CGovernanceVote::UpdateHash() const
     // Note: doesn't match serialization
 
     CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
-    ss << masternodeOutpoint << uint8_t{} << 0xffffffff; // adding dummy values here to match old hashing format
+    ss << mazanodeOutpoint << uint8_t{} << 0xffffffff; // adding dummy values here to match old hashing format
     ss << nParentHash;
     ss << nVoteSignal;
     ss << nVoteOutcome;
@@ -154,33 +154,33 @@ uint256 CGovernanceVote::GetSignatureHash() const
     return SerializeHash(*this);
 }
 
-bool CGovernanceVote::Sign(const CKey& keyMasternode, const CPubKey& pubKeyMasternode)
+bool CGovernanceVote::Sign(const CKey& keyMazanode, const CPubKey& pubKeyMazanode)
 {
     std::string strError;
 
     if (sporkManager.IsSporkActive(SPORK_6_NEW_SIGS)) {
         uint256 hash = GetSignatureHash();
 
-        if(!CHashSigner::SignHash(hash, keyMasternode, vchSig)) {
+        if(!CHashSigner::SignHash(hash, keyMazanode, vchSig)) {
             LogPrintf("CGovernanceVote::Sign -- SignHash() failed\n");
             return false;
         }
 
-        if (!CHashSigner::VerifyHash(hash, pubKeyMasternode, vchSig, strError)) {
+        if (!CHashSigner::VerifyHash(hash, pubKeyMazanode, vchSig, strError)) {
             LogPrintf("CGovernanceVote::Sign -- VerifyHash() failed, error: %s\n", strError);
             return false;
         }
     } else {
 
-        std::string strMessage = masternodeOutpoint.ToStringShort() + "|" + nParentHash.ToString() + "|" +
+        std::string strMessage = mazanodeOutpoint.ToStringShort() + "|" + nParentHash.ToString() + "|" +
             boost::lexical_cast<std::string>(nVoteSignal) + "|" + boost::lexical_cast<std::string>(nVoteOutcome) + "|" + boost::lexical_cast<std::string>(nTime);
 
-        if(!CMessageSigner::SignMessage(strMessage, vchSig, keyMasternode)) {
+        if(!CMessageSigner::SignMessage(strMessage, vchSig, keyMazanode)) {
             LogPrintf("CGovernanceVote::Sign -- SignMessage() failed\n");
             return false;
         }
 
-        if(!CMessageSigner::VerifyMessage(pubKeyMasternode, vchSig, strMessage, strError)) {
+        if(!CMessageSigner::VerifyMessage(pubKeyMazanode, vchSig, strMessage, strError)) {
             LogPrintf("CGovernanceVote::Sign -- VerifyMessage() failed, error: %s\n", strError);
             return false;
         }
@@ -189,33 +189,33 @@ bool CGovernanceVote::Sign(const CKey& keyMasternode, const CPubKey& pubKeyMaste
     return true;
 }
 
-bool CGovernanceVote::CheckSignature(const CPubKey& pubKeyMasternode) const
+bool CGovernanceVote::CheckSignature(const CPubKey& pubKeyMazanode) const
 {
     std::string strError;
 
     if (sporkManager.IsSporkActive(SPORK_6_NEW_SIGS)) {
         uint256 hash = GetSignatureHash();
 
-        if (!CHashSigner::VerifyHash(hash, pubKeyMasternode, vchSig, strError)) {
+        if (!CHashSigner::VerifyHash(hash, pubKeyMazanode, vchSig, strError)) {
             // could be a signature in old format
-            std::string strMessage = masternodeOutpoint.ToStringShort() + "|" + nParentHash.ToString() + "|" +
+            std::string strMessage = mazanodeOutpoint.ToStringShort() + "|" + nParentHash.ToString() + "|" +
                 boost::lexical_cast<std::string>(nVoteSignal) + "|" +
                 boost::lexical_cast<std::string>(nVoteOutcome) + "|" +
                 boost::lexical_cast<std::string>(nTime);
 
-            if(!CMessageSigner::VerifyMessage(pubKeyMasternode, vchSig, strMessage, strError)) {
+            if(!CMessageSigner::VerifyMessage(pubKeyMazanode, vchSig, strMessage, strError)) {
                 // nope, not in old format either
                 LogPrint("gobject", "CGovernanceVote::IsValid -- VerifyMessage() failed, error: %s\n", strError);
                 return false;
             }
         }
     } else {
-        std::string strMessage = masternodeOutpoint.ToStringShort() + "|" + nParentHash.ToString() + "|" +
+        std::string strMessage = mazanodeOutpoint.ToStringShort() + "|" + nParentHash.ToString() + "|" +
             boost::lexical_cast<std::string>(nVoteSignal) + "|" +
             boost::lexical_cast<std::string>(nVoteOutcome) + "|" +
             boost::lexical_cast<std::string>(nTime);
 
-        if(!CMessageSigner::VerifyMessage(pubKeyMasternode, vchSig, strMessage, strError)) {
+        if(!CMessageSigner::VerifyMessage(pubKeyMazanode, vchSig, strMessage, strError)) {
             LogPrint("gobject", "CGovernanceVote::IsValid -- VerifyMessage() failed, error: %s\n", strError);
             return false;
         }
@@ -245,20 +245,20 @@ bool CGovernanceVote::IsValid(bool fSignatureCheck) const
         return false;
     }
 
-    masternode_info_t infoMn;
-    if(!mnodeman.GetMasternodeInfo(masternodeOutpoint, infoMn)) {
-        LogPrint("gobject", "CGovernanceVote::IsValid -- Unknown Masternode - %s\n", masternodeOutpoint.ToStringShort());
+    mazanode_info_t infoMn;
+    if(!mnodeman.GetMazanodeInfo(mazanodeOutpoint, infoMn)) {
+        LogPrint("gobject", "CGovernanceVote::IsValid -- Unknown Mazanode - %s\n", mazanodeOutpoint.ToStringShort());
         return false;
     }
 
     if(!fSignatureCheck) return true;
 
-    return CheckSignature(infoMn.pubKeyMasternode);
+    return CheckSignature(infoMn.pubKeyMazanode);
 }
 
 bool operator==(const CGovernanceVote& vote1, const CGovernanceVote& vote2)
 {
-    bool fResult = ((vote1.masternodeOutpoint == vote2.masternodeOutpoint) &&
+    bool fResult = ((vote1.mazanodeOutpoint == vote2.mazanodeOutpoint) &&
                     (vote1.nParentHash == vote2.nParentHash) &&
                     (vote1.nVoteOutcome == vote2.nVoteOutcome) &&
                     (vote1.nVoteSignal == vote2.nVoteSignal) &&
@@ -268,11 +268,11 @@ bool operator==(const CGovernanceVote& vote1, const CGovernanceVote& vote2)
 
 bool operator<(const CGovernanceVote& vote1, const CGovernanceVote& vote2)
 {
-    bool fResult = (vote1.masternodeOutpoint < vote2.masternodeOutpoint);
+    bool fResult = (vote1.mazanodeOutpoint < vote2.mazanodeOutpoint);
     if(!fResult) {
         return false;
     }
-    fResult = (vote1.masternodeOutpoint == vote2.masternodeOutpoint);
+    fResult = (vote1.mazanodeOutpoint == vote2.mazanodeOutpoint);
 
     fResult = fResult && (vote1.nParentHash < vote2.nParentHash);
     if(!fResult) {

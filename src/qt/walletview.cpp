@@ -9,7 +9,7 @@
 #include "bitcoingui.h"
 #include "clientmodel.h"
 #include "guiutil.h"
-#include "masternodeconfig.h"
+#include "mazanodeconfig.h"
 #include "optionsmodel.h"
 #include "overviewpage.h"
 #include "platformstyle.h"
@@ -82,9 +82,9 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
     addWidget(sendCoinsPage);
 
     QSettings settings;
-    if (!fLiteMode && settings.value("fShowMasternodesTab").toBool()) {
-        masternodeListPage = new MasternodeList(platformStyle);
-        addWidget(masternodeListPage);
+    if (!fLiteMode && settings.value("fShowMazanodesTab").toBool()) {
+        mazanodeListPage = new MazanodeList(platformStyle);
+        addWidget(mazanodeListPage);
     }
 
     // Clicking on a transaction on the overview pre-selects the transaction on the transaction history page
@@ -139,8 +139,8 @@ void WalletView::setClientModel(ClientModel *_clientModel)
     overviewPage->setClientModel(_clientModel);
     sendCoinsPage->setClientModel(_clientModel);
     QSettings settings;
-    if (!fLiteMode && settings.value("fShowMasternodesTab").toBool()) {
-        masternodeListPage->setClientModel(_clientModel);
+    if (!fLiteMode && settings.value("fShowMazanodesTab").toBool()) {
+        mazanodeListPage->setClientModel(_clientModel);
     }
 }
 
@@ -152,8 +152,8 @@ void WalletView::setWalletModel(WalletModel *_walletModel)
     transactionView->setModel(_walletModel);
     overviewPage->setWalletModel(_walletModel);
     QSettings settings;
-    if (!fLiteMode && settings.value("fShowMasternodesTab").toBool()) {
-        masternodeListPage->setWalletModel(_walletModel);
+    if (!fLiteMode && settings.value("fShowMazanodesTab").toBool()) {
+        mazanodeListPage->setWalletModel(_walletModel);
     }
     receiveCoinsPage->setModel(_walletModel);
     sendCoinsPage->setModel(_walletModel);
@@ -214,11 +214,11 @@ void WalletView::gotoHistoryPage()
     setCurrentWidget(transactionsPage);
 }
 
-void WalletView::gotoMasternodePage()
+void WalletView::gotoMazanodePage()
 {
     QSettings settings;
-    if (!fLiteMode && settings.value("fShowMasternodesTab").toBool()) {
-        setCurrentWidget(masternodeListPage);
+    if (!fLiteMode && settings.value("fShowMazanodesTab").toBool()) {
+        setCurrentWidget(mazanodeListPage);
     }
 }
 

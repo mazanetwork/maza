@@ -12,35 +12,35 @@
     * Click *Request payment* button
 5. Click the *Copy Address* button
 
-Create a new wallet address for each Masternode.
+Create a new wallet address for each Mazanode.
 
 Close your QT Wallet.
 
-### Send 1000 DASH to New Addresses
+### Send 1000 MAZA to New Addresses
 
-Send exactly 1000 DASH to each new address created above.
+Send exactly 1000 MAZA to each new address created above.
 
-### Create New Masternode Private Keys
+### Create New Mazanode Private Keys
 
 Open your QT Wallet and go to console (from the menu select `Tools` => `Debug Console`)
 
 Issue the following:
 
-```masternode genkey```
+```mazanode genkey```
 
-*Note: A masternode private key will need to be created for each Masternode you run. You should not use the same masternode private key for multiple Masternodes.*
+*Note: A mazanode private key will need to be created for each Mazanode you run. You should not use the same mazanode private key for multiple Mazanodes.*
 
 Close your QT Wallet.
 
-## <a name="masternodeconf"></a>Create masternode.conf file
+## <a name="mazanodeconf"></a>Create mazanode.conf file
 
 Remember... this is local. Make sure your QT is not running.
 
-Create the `masternode.conf` file in the same directory as your `wallet.dat`.
+Create the `mazanode.conf` file in the same directory as your `wallet.dat`.
 
-Copy the masternode private key and correspondig collateral output transaction that holds the 1000 DASH.
+Copy the mazanode private key and correspondig collateral output transaction that holds the 1000 MAZA.
 
-*Note: The masternode priviate key is **not** the same as a wallet private key. **Never** put your wallet private key in the masternode.conf file. That is almost equivalent to putting your 1000 DASH on the remote server and defeats the purpose of a hot/cold setup.*
+*Note: The mazanode priviate key is **not** the same as a wallet private key. **Never** put your wallet private key in the mazanode.conf file. That is almost equivalent to putting your 1000 MAZA on the remote server and defeats the purpose of a hot/cold setup.*
 
 ### Get the collateral output
 
@@ -48,17 +48,17 @@ Open your QT Wallet and go to console (from the menu select `Tools` => `Debug Co
 
 Issue the following:
 
-```masternode outputs```
+```mazanode outputs```
 
 Make note of the hash (which is your collateral_output) and index.
 
-### Enter your Masternode details into your masternode.conf file
-[From the dash github repo](https://github.com/dashpay/dash/blob/master/doc/masternode_conf.md)
+### Enter your Mazanode details into your mazanode.conf file
+[From the maza github repo](https://github.com/mazacoin/maza/blob/master/doc/mazanode_conf.md)
 
-`masternode.conf` format is a space seperated text file. Each line consisting of an alias, IP address followed by port, masternode private key, collateral output transaction id and collateral output index.
+`mazanode.conf` format is a space seperated text file. Each line consisting of an alias, IP address followed by port, mazanode private key, collateral output transaction id and collateral output index.
 
 ```
-alias ipaddress:port masternode_private_key collateral_output collateral_output_index
+alias ipaddress:port mazanode_private_key collateral_output collateral_output_index
 ```
 
 Example:
@@ -68,18 +68,18 @@ mn01 127.0.0.1:9999 93HaYBVUCYjEMeeH1Y4sBGLALQZE1Yc1K64xiqgX37tGBDQL8Xg 2bcd3c84
 mn02 127.0.0.2:9999 93WaAb3htPJEV8E9aQcN23Jt97bPex7YvWfgMDTUdWJvzmrMqey aa9f1034d973377a5e733272c3d0eced1de22555ad45d6b24abadff8087948d4 0
 ```
 
-## Update dash.conf on server
+## Update maza.conf on server
 
-If you generated a new masternode private key, you will need to update the remote `dash.conf` files.
+If you generated a new mazanode private key, you will need to update the remote `maza.conf` files.
 
 Shut down the daemon and then edit the file.
 
-```nano .dashcore/dash.conf```
+```nano .mazanetwork/maza.conf```
 
-### Edit the masternodeprivkey
-If you generated a new masternode private key, you will need to update the `masternodeprivkey` value in your remote `dash.conf` file.
+### Edit the mazanodeprivkey
+If you generated a new mazanode private key, you will need to update the `mazanodeprivkey` value in your remote `maza.conf` file.
 
-## Start your Masternodes
+## Start your Mazanodes
 
 ### Remote
 
@@ -87,9 +87,9 @@ If your remote server is not running, start your remote daemon as you normally w
 
 You can confirm that remote server is on the correct block by issuing
 
-```dash-cli getinfo```
+```maza-cli getinfo```
 
-and comparing with the official explorer at https://explorer.dashpay.org/chain/Dash
+and comparing with the official explorer at https://explorer.mazacoin.org/chain/Maza
 
 ### Local
 
@@ -99,35 +99,35 @@ Finally... time to start from local.
 
 From the menu select `Tools` => `Debug Console`
 
-If you want to review your `masternode.conf` setting before starting Masternodes, issue the following in the Debug Console:
+If you want to review your `mazanode.conf` setting before starting Mazanodes, issue the following in the Debug Console:
 
-```masternode list-conf```
+```mazanode list-conf```
 
-Give it the eye-ball test. If satisfied, you can start your Masternodes one of two ways.
+Give it the eye-ball test. If satisfied, you can start your Mazanodes one of two ways.
 
-1. `masternode start-alias [alias_from_masternode.conf]`  
-Example ```masternode start-alias mn01```
-2. `masternode start-many`
+1. `mazanode start-alias [alias_from_mazanode.conf]`  
+Example ```mazanode start-alias mn01```
+2. `mazanode start-many`
 
-## Verify that Masternodes actually started
+## Verify that Mazanodes actually started
 
 ### Remote
 
-Issue command `masternode status`
+Issue command `mazanode status`
 It should return you something like that:
 ```
-dash-cli masternode status
+maza-cli mazanode status
 {
     "outpoint" : "<collateral_output>-<collateral_output_index>",
     "service" : "<ipaddress>:<port>",
-    "pubkey" : "<1000 DASH address>",
-    "status" : "Masternode successfully started"
+    "pubkey" : "<1000 MAZA address>",
+    "status" : "Mazanode successfully started"
 }
 ```
-Command output should have "_Masternode successfully started_" in its `status` field now. If it says "_not capable_" instead, you should check your config again.
+Command output should have "_Mazanode successfully started_" in its `status` field now. If it says "_not capable_" instead, you should check your config again.
 
 ### Local
 
-Search your Masternodes on https://dashninja.pl/masternodes.html
+Search your Mazanodes on https://mazaninja.pl/mazanodes.html
 
 _Hint: Bookmark it, you definitely will be using this site a lot._

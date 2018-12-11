@@ -1,5 +1,5 @@
 ---
-name: "dash-dmg-signer"
+name: "maza-dmg-signer"
 suites:
 - "trusty"
 architectures:
@@ -8,7 +8,7 @@ packages:
 - "faketime"
 remotes: []
 files:
-- "dash-osx-unsigned.tar.gz"
+- "maza-osx-unsigned.tar.gz"
 - "signature.tar.gz"
 script: |
   WRAP_DIR=$HOME/wrapped
@@ -26,8 +26,8 @@ script: |
     chmod +x ${WRAP_DIR}/${prog}
   done
 
-  UNSIGNED=dash-osx-unsigned.tar.gz
-  SIGNED=dash-osx-signed.dmg
+  UNSIGNED=maza-osx-unsigned.tar.gz
+  SIGNED=maza-osx-signed.dmg
 
   tar -xf ${UNSIGNED}
   OSX_VOLNAME="$(cat osx_volname)"

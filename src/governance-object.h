@@ -1,11 +1,11 @@
-// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2014-2017 The Maza Network developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef GOVERNANCE_OBJECT_H
 #define GOVERNANCE_OBJECT_H
 
-//#define ENABLE_DASH_DEBUG
+//#define ENABLE_MAZA_DEBUG
 
 #include "cachemultimap.h"
 #include "governance-exceptions.h"
@@ -147,15 +147,15 @@ private:
     /// Data field - can be used for anything
     std::vector<unsigned char> vchData;
 
-    /// Masternode info for signed objects
-    COutPoint masternodeOutpoint;
+    /// Mazanode info for signed objects
+    COutPoint mazanodeOutpoint;
     std::vector<unsigned char> vchSig;
 
     /// is valid by blockchain
     bool fCachedLocalValidity;
     std::string strLocalValidityError;
 
-    // VARIOUS FLAGS FOR OBJECT / SET VIA MASTERNODE VOTING
+    // VARIOUS FLAGS FOR OBJECT / SET VIA MAZANODE VOTING
 
     /// true == minimum network support has been reached for this object to be funded (doesn't mean it will for sure though)
     bool fCachedFunding;
@@ -214,8 +214,8 @@ public:
         return nCollateralHash;
     }
 
-    const COutPoint& GetMasternodeOutpoint() const {
-        return masternodeOutpoint;
+    const COutPoint& GetMazanodeOutpoint() const {
+        return mazanodeOutpoint;
     }
 
     bool IsSetCachedFunding() const {
@@ -252,9 +252,9 @@ public:
 
     // Signature related functions
 
-    void SetMasternodeOutpoint(const COutPoint& outpoint);
-    bool Sign(const CKey& keyMasternode, const CPubKey& pubKeyMasternode);
-    bool CheckSignature(const CPubKey& pubKeyMasternode) const;
+    void SetMazanodeOutpoint(const COutPoint& outpoint);
+    bool Sign(const CKey& keyMazanode, const CPubKey& pubKeyMazanode);
+    bool CheckSignature(const CPubKey& pubKeyMazanode) const;
 
     std::string GetSignatureMessage() const;
     uint256 GetSignatureHash() const;
@@ -263,7 +263,7 @@ public:
 
     bool IsValidLocally(std::string& strError, bool fCheckCollateral) const;
 
-    bool IsValidLocally(std::string& strError, bool& fMissingMasternode, bool& fMissingConfirmations, bool fCheckCollateral) const;
+    bool IsValidLocally(std::string& strError, bool& fMissingMazanode, bool& fMissingConfirmations, bool fCheckCollateral) const;
 
     /// Check the collateral transaction for the budget proposal/finalized budget
     bool IsCollateralValid(std::string& strError, bool& fMissingConfirmations) const;
@@ -330,14 +330,14 @@ public:
             CTxIn txin;
             if (ser_action.ForRead()) {
                 READWRITE(txin);
-                masternodeOutpoint = txin.prevout;
+                mazanodeOutpoint = txin.prevout;
             } else {
-                txin = CTxIn(masternodeOutpoint);
+                txin = CTxIn(mazanodeOutpoint);
                 READWRITE(txin);
             }
         } else {
             // using new format directly
-            READWRITE(masternodeOutpoint);
+            READWRITE(mazanodeOutpoint);
         }
         if (!(s.GetType() & SER_GETHASH)) {
             READWRITE(vchSig);
@@ -372,7 +372,7 @@ private:
                      CConnman& connman);
 
     /// Called when MN's which have voted on this object have been removed
-    void ClearMasternodeVotes();
+    void ClearMazanodeVotes();
 
     void CheckOrphanVotes(CConnman& connman);
 

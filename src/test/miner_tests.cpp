@@ -8,7 +8,7 @@
 #include "consensus/merkle.h"
 #include "consensus/validation.h"
 #include "validation.h"
-#include "masternode-payments.h"
+#include "mazanode-payments.h"
 #include "miner.h"
 #include "policy/policy.h"
 #include "pubkey.h"
@@ -18,7 +18,7 @@
 #include "util.h"
 #include "utilstrencodings.h"
 
-#include "test/test_dash.h"
+#include "test/test_maza.h"
 
 #include <memory>
 

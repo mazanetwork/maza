@@ -23,7 +23,7 @@ Darkcoin Core:
 - Adapted BIP44 coin type `5` for Darkcoin (0x80000005) as defined in SLIP-0044
 - Added new units: `duffs` (1 / 100.000.000 DRK)
 - Added units for testnet: tDRK, mtDRK, utDRK, tduffs
-- Added new DNS seed from masternode.io
+- Added new DNS seed from mazanode.io
 - Fixed wallet locking after sending coins
 - Add `-regtest` mode, similar to testnet but private with instant block
   generation with `setgenerate` RPC.
@@ -32,15 +32,15 @@ Darkcoin Core:
   `keepass`, `keepassport`, `keepasskey`, `keepassid`, `keepassname`
 
 
-Masternodes:
+Mazanodes:
 
-- Improve support for start-many with multi masternode config
-- New masternode rpc commands: stop-many, start-alias, stop-alias, list-conf
-- Fixed possible masternode payments exploit
-- Better support for non-specific masternode payments
-- Added masternode support for regtest
-- Randomly sort masternodes before picking next winner
-- Show number of masternodes in debug window
+- Improve support for start-many with multi mazanode config
+- New mazanode rpc commands: stop-many, start-alias, stop-alias, list-conf
+- Fixed possible mazanode payments exploit
+- Better support for non-specific mazanode payments
+- Added mazanode support for regtest
+- Randomly sort mazanodes before picking next winner
+- Show number of mazanodes in debug window
 
 
 Darksend:
@@ -100,13 +100,13 @@ Command-line options:
 - New option: -nospendzeroconfchange to never spend unconfirmed change outputs
 - New option: -zapwallettxes to rebuild the wallet's transaction information
 - Rename option '-tor' to '-onion' to better reflect what it does
-- Add '-disablewallet' mode to let dashd run entirely without wallet (when
+- Add '-disablewallet' mode to let mazad run entirely without wallet (when
   built with wallet)
 - Update default '-rpcsslciphers' to include TLSv1.2
 - make '-logtimestamps' default on and rework help-message
 - RPC client option: '-rpcwait', to wait for server start
 - Remove '-logtodebugger'
-- Allow `-noserver` with dashd
+- Allow `-noserver` with mazad
 - Make -proxy set all network types, avoiding a connect leak.
 
 

@@ -1,11 +1,11 @@
-// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2014-2017 The Maza Network developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef PRIVATESENDCLIENT_H
 #define PRIVATESENDCLIENT_H
 
-#include "masternode.h"
+#include "mazanode.h"
 #include "privatesend.h"
 #include "wallet/wallet.h"
 #include "privatesend-util.h"
@@ -80,8 +80,8 @@ public:
 class CPrivateSendClient : public CPrivateSendBase
 {
 private:
-    // Keep track of the used Masternodes
-    std::vector<COutPoint> vecMasternodesUsed;
+    // Keep track of the used Mazanodes
+    std::vector<COutPoint> vecMazanodesUsed;
 
     std::vector<CAmount> vecDenominationsSkipped;
     std::vector<COutPoint> vecOutPointLocked;
@@ -98,7 +98,7 @@ private:
     std::string strLastMessage;
     std::string strAutoDenomResult;
 
-    masternode_info_t infoMixingMasternode;
+    mazanode_info_t infoMixingMazanode;
     CMutableTransaction txMyCollateral; // client side collateral
     CPendingDsaRequest pendingDsaRequest;
 
@@ -125,14 +125,14 @@ private:
     bool MakeCollateralAmounts(CConnman& connman);
     bool MakeCollateralAmounts(const CompactTallyItem& tallyItem, bool fTryDenominated, CConnman& connman);
 
-    /// As a client, submit part of a future mixing transaction to a Masternode to start the process
+    /// As a client, submit part of a future mixing transaction to a Mazanode to start the process
     bool SubmitDenominate(CConnman& connman);
     /// step 1: prepare denominated inputs and outputs
     bool PrepareDenominate(int nMinRounds, int nMaxRounds, std::string& strErrorRet, std::vector<CTxDSIn>& vecTxDSInRet, std::vector<CTxOut>& vecTxOutRet);
     /// step 2: send denominated inputs and outputs prepared in step 1
     bool SendDenominate(const std::vector<CTxDSIn>& vecTxDSIn, const std::vector<CTxOut>& vecTxOut, CConnman& connman);
 
-    /// Get Masternode updates about the progress of mixing
+    /// Get Mazanode updates about the progress of mixing
     bool CheckPoolStateUpdate(PoolState nStateNew, int nEntriesCountNew, PoolStatusUpdate nStatusUpdate, PoolMessage nMessageID, int nSessionIDNew=0);
     // Set the 'state' value, with some logging and capturing when the state changed
     void SetState(PoolState nStateNew);
@@ -179,8 +179,8 @@ public:
 
     std::string GetStatus();
 
-    bool GetMixingMasternodeInfo(masternode_info_t& mnInfoRet);
-    bool IsMixingMasternode(const CNode* pnode);
+    bool GetMixingMazanodeInfo(mazanode_info_t& mnInfoRet);
+    bool IsMixingMazanode(const CNode* pnode);
 
     /// Passively run mixing in the background according to the configuration in settings
     bool DoAutomaticDenominating(CConnman& connman, bool fDryRun=false);

@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2014-2017 The Maza Network developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -6,9 +6,9 @@
 #include "dsnotificationinterface.h"
 #include "instantx.h"
 #include "governance.h"
-#include "masternodeman.h"
-#include "masternode-payments.h"
-#include "masternode-sync.h"
+#include "mazanodeman.h"
+#include "mazanode-payments.h"
+#include "mazanode-sync.h"
 #include "privatesend.h"
 #ifdef ENABLE_WALLET
 #include "privatesend-client.h"
@@ -22,12 +22,12 @@ void CDSNotificationInterface::InitializeCurrentBlockTip()
 
 void CDSNotificationInterface::AcceptedBlockHeader(const CBlockIndex *pindexNew)
 {
-    masternodeSync.AcceptedBlockHeader(pindexNew);
+    mazanodeSync.AcceptedBlockHeader(pindexNew);
 }
 
 void CDSNotificationInterface::NotifyHeaderTip(const CBlockIndex *pindexNew, bool fInitialDownload)
 {
-    masternodeSync.NotifyHeaderTip(pindexNew, fInitialDownload, connman);
+    mazanodeSync.NotifyHeaderTip(pindexNew, fInitialDownload, connman);
 }
 
 void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, const CBlockIndex *pindexFork, bool fInitialDownload)
@@ -35,7 +35,7 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
     if (pindexNew == pindexFork) // blocks were disconnected without any new ones
         return;
 
-    masternodeSync.UpdatedBlockTip(pindexNew, fInitialDownload, connman);
+    mazanodeSync.UpdatedBlockTip(pindexNew, fInitialDownload, connman);
 
     // Update global DIP0001 activation status
     fDIP0001ActiveAtTip = pindexNew->nHeight >= Params().GetConsensus().DIP0001Height;

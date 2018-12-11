@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
-// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2014-2017 The Maza Network developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -24,8 +24,8 @@
 #include "txmempool.h"
 #include "util.h"
 #include "utilmoneystr.h"
-#include "masternode-payments.h"
-#include "masternode-sync.h"
+#include "mazanode-payments.h"
+#include "mazanode-sync.h"
 #include "validationinterface.h"
 
 #include <algorithm>
@@ -36,7 +36,7 @@
 
 //////////////////////////////////////////////////////////////////////////////
 //
-// DashMiner
+// MazaMiner
 //
 
 //
@@ -168,11 +168,11 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     coinbaseTx.vout[0].nValue = blockReward;
     coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
 
-    // Update coinbase transaction with additional info about masternode and governance payments,
+    // Update coinbase transaction with additional info about mazanode and governance payments,
     // get some info back to pass to getblocktemplate
-    FillBlockPayments(coinbaseTx, nHeight, blockReward, pblock->txoutMasternode, pblock->voutSuperblock);
-    // LogPrintf("CreateNewBlock -- nBlockHeight %d blockReward %lld txoutMasternode %s coinbaseTx %s",
-    //             nHeight, blockReward, pblock->txoutMasternode.ToString(), coinbaseTx.ToString());
+    FillBlockPayments(coinbaseTx, nHeight, blockReward, pblock->txoutMazanode, pblock->voutSuperblock);
+    // LogPrintf("CreateNewBlock -- nBlockHeight %d blockReward %lld txoutMazanode %s coinbaseTx %s",
+    //             nHeight, blockReward, pblock->txoutMazanode.ToString(), coinbaseTx.ToString());
 
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
     pblocktemplate->vTxFees[0] = -nFees;

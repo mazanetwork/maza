@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2014-2017 The Maza Network developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 #ifndef INSTANTX_H
@@ -17,7 +17,7 @@ class CInstantSend;
 extern CInstantSend instantsend;
 
 /*
-    At 15 signatures, 1/2 of the masternode network can be owned by
+    At 15 signatures, 1/2 of the mazanode network can be owned by
     one party without compromising the security of InstantSend
     (1000/2150.0)**10 = 0.00047382219560689856
     (1000/2900.0)**10 = 2.3769498616783657e-05
@@ -67,8 +67,8 @@ private:
     std::map<COutPoint, std::set<uint256> > mapVotedOutpoints; ///< UTXO - Tx hash set
     std::map<COutPoint, uint256> mapLockedOutpoints; ///< UTXO - Tx hash
 
-    /// Track masternodes who voted with no txlockrequest (for DOS protection)
-    std::map<COutPoint, int64_t> mapMasternodeOrphanVotes; ///< MN outpoint - Time
+    /// Track mazanodes who voted with no txlockrequest (for DOS protection)
+    std::map<COutPoint, int64_t> mapMazanodeOrphanVotes; ///< MN outpoint - Time
 
     bool CreateTxLockCandidate(const CTxLockRequest& txLockRequest);
     void CreateEmptyTxLockCandidate(const uint256& txHash);
@@ -80,7 +80,7 @@ private:
     void UpdateVotedOutpoints(const CTxLockVote& vote, CTxLockCandidate& txLockCandidate);
     bool ProcessOrphanTxLockVote(const CTxLockVote& vote);
     void ProcessOrphanTxLockVotes();
-    int64_t GetAverageMasternodeOrphanVoteTime();
+    int64_t GetAverageMazanodeOrphanVoteTime();
 
     void TryToFinalizeLockCandidate(const CTxLockCandidate& txLockCandidate);
     void LockTransactionInputs(const CTxLockCandidate& txLockCandidate);
@@ -183,10 +183,10 @@ public:
 };
 
 /**
- * An InstantSend transaction lock vote. Sent by a masternode in response to a
+ * An InstantSend transaction lock vote. Sent by a mazanode in response to a
  * transaction lock request (ix message) to indicate the transaction input can
  * be locked. Contains the proposed transaction's hash and the outpoint being
- * locked along with the masternodes outpoint and signature.
+ * locked along with the mazanodes outpoint and signature.
  * @see CTxLockRequest
  */
 class CTxLockVote
@@ -194,8 +194,8 @@ class CTxLockVote
 private:
     uint256 txHash;
     COutPoint outpoint;
-    COutPoint outpointMasternode;
-    std::vector<unsigned char> vchMasternodeSignature;
+    COutPoint outpointMazanode;
+    std::vector<unsigned char> vchMazanodeSignature;
     // local memory only
     int nConfirmedHeight; ///< When corresponding tx is 0-confirmed or conflicted, nConfirmedHeight is -1
     int64_t nTimeCreated;
@@ -204,17 +204,17 @@ public:
     CTxLockVote() :
         txHash(),
         outpoint(),
-        outpointMasternode(),
-        vchMasternodeSignature(),
+        outpointMazanode(),
+        vchMazanodeSignature(),
         nConfirmedHeight(-1),
         nTimeCreated(GetTime())
         {}
 
-    CTxLockVote(const uint256& txHashIn, const COutPoint& outpointIn, const COutPoint& outpointMasternodeIn) :
+    CTxLockVote(const uint256& txHashIn, const COutPoint& outpointIn, const COutPoint& outpointMazanodeIn) :
         txHash(txHashIn),
         outpoint(outpointIn),
-        outpointMasternode(outpointMasternodeIn),
-        vchMasternodeSignature(),
+        outpointMazanode(outpointMazanodeIn),
+        vchMazanodeSignature(),
         nConfirmedHeight(-1),
         nTimeCreated(GetTime())
         {}
@@ -225,9 +225,9 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(txHash);
         READWRITE(outpoint);
-        READWRITE(outpointMasternode);
+        READWRITE(outpointMazanode);
         if (!(s.GetType() & SER_GETHASH)) {
-            READWRITE(vchMasternodeSignature);
+            READWRITE(vchMazanodeSignature);
         }
     }
 
@@ -236,7 +236,7 @@ public:
 
     uint256 GetTxHash() const { return txHash; }
     COutPoint GetOutpoint() const { return outpoint; }
-    COutPoint GetMasternodeOutpoint() const { return outpointMasternode; }
+    COutPoint GetMazanodeOutpoint() const { return outpointMazanode; }
 
     bool IsValid(CNode* pnode, CConnman& connman) const;
     void SetConfirmedHeight(int nConfirmedHeightIn) { nConfirmedHeight = nConfirmedHeightIn; }
@@ -257,7 +257,7 @@ class COutPointLock
 {
 private:
     COutPoint outpoint; ///< UTXO
-    std::map<COutPoint, CTxLockVote> mapMasternodeVotes; ///< Masternode outpoint - vote
+    std::map<COutPoint, CTxLockVote> mapMazanodeVotes; ///< Mazanode outpoint - vote
     bool fAttacked = false;
 
 public:
@@ -266,15 +266,15 @@ public:
 
     COutPointLock(const COutPoint& outpointIn) :
         outpoint(outpointIn),
-        mapMasternodeVotes()
+        mapMazanodeVotes()
         {}
 
     COutPoint GetOutpoint() const { return outpoint; }
 
     bool AddVote(const CTxLockVote& vote);
     std::vector<CTxLockVote> GetVotes() const;
-    bool HasMasternodeVoted(const COutPoint& outpointMasternodeIn) const;
-    int CountVotes() const { return fAttacked ? 0 : mapMasternodeVotes.size(); }
+    bool HasMazanodeVoted(const COutPoint& outpointMazanodeIn) const;
+    int CountVotes() const { return fAttacked ? 0 : mapMazanodeVotes.size(); }
     bool IsReady() const { return !fAttacked && CountVotes() >= SIGNATURES_REQUIRED; }
     void MarkAsAttacked() { fAttacked = true; }
 
@@ -308,7 +308,7 @@ public:
     bool AddVote(const CTxLockVote& vote);
     bool IsAllOutPointsReady() const;
 
-    bool HasMasternodeVoted(const COutPoint& outpointIn, const COutPoint& outpointMasternodeIn);
+    bool HasMazanodeVoted(const COutPoint& outpointIn, const COutPoint& outpointMazanodeIn);
     int CountVotes() const;
 
     void SetConfirmedHeight(int nConfirmedHeightIn) { nConfirmedHeight = nConfirmedHeightIn; }

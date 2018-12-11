@@ -39,14 +39,14 @@ const char *SENDCMPCT="sendcmpct";
 const char *CMPCTBLOCK="cmpctblock";
 const char *GETBLOCKTXN="getblocktxn";
 const char *BLOCKTXN="blocktxn";
-// Dash message types
+// Maza message types
 const char *TXLOCKREQUEST="ix";
 const char *TXLOCKVOTE="txlvote";
 const char *SPORK="spork";
 const char *GETSPORKS="getsporks";
-const char *MASTERNODEPAYMENTVOTE="mnw";
-const char *MASTERNODEPAYMENTBLOCK="mnwb";
-const char *MASTERNODEPAYMENTSYNC="mnget";
+const char *MAZANODEPAYMENTVOTE="mnw";
+const char *MAZANODEPAYMENTBLOCK="mnwb";
+const char *MAZANODEPAYMENTSYNC="mnget";
 const char *MNBUDGETSYNC="mnvs"; // deprecated since 12.1
 const char *MNBUDGETVOTE="mvote"; // deprecated since 12.1
 const char *MNBUDGETPROPOSAL="mprop"; // deprecated since 12.1
@@ -77,13 +77,13 @@ static const char* ppszTypeName[] =
     NetMsgType::TX,
     NetMsgType::BLOCK,
     "filtered block", // Should never occur
-    // Dash message types
+    // Maza message types
     // NOTE: include non-implmented here, we must keep this list in sync with enum in protocol.h
     NetMsgType::TXLOCKREQUEST,
     NetMsgType::TXLOCKVOTE,
     NetMsgType::SPORK,
-    NetMsgType::MASTERNODEPAYMENTVOTE,
-    NetMsgType::MASTERNODEPAYMENTBLOCK, // reusing, was MNSCANERROR previousely, was NOT used in 12.0, we need this for inv
+    NetMsgType::MAZANODEPAYMENTVOTE,
+    NetMsgType::MAZANODEPAYMENTBLOCK, // reusing, was MNSCANERROR previousely, was NOT used in 12.0, we need this for inv
     NetMsgType::MNBUDGETVOTE, // deprecated since 12.1
     NetMsgType::MNBUDGETPROPOSAL, // deprecated since 12.1
     NetMsgType::MNBUDGETFINAL, // deprecated since 12.1
@@ -128,15 +128,15 @@ const static std::string allNetMessageTypes[] = {
     NetMsgType::CMPCTBLOCK,
     NetMsgType::GETBLOCKTXN,
     NetMsgType::BLOCKTXN,
-    // Dash message types
+    // Maza message types
     // NOTE: do NOT include non-implmented here, we want them to be "Unknown command" in ProcessMessage()
     NetMsgType::TXLOCKREQUEST,
     NetMsgType::TXLOCKVOTE,
     NetMsgType::SPORK,
     NetMsgType::GETSPORKS,
-    NetMsgType::MASTERNODEPAYMENTVOTE,
-    // NetMsgType::MASTERNODEPAYMENTBLOCK, // there is no message for this, only inventory
-    NetMsgType::MASTERNODEPAYMENTSYNC,
+    NetMsgType::MAZANODEPAYMENTVOTE,
+    // NetMsgType::MAZANODEPAYMENTBLOCK, // there is no message for this, only inventory
+    NetMsgType::MAZANODEPAYMENTSYNC,
     NetMsgType::MNANNOUNCE,
     NetMsgType::MNPING,
     NetMsgType::DSACCEPT,
