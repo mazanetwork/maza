@@ -32,9 +32,12 @@ cache:
 env:
   global:
     # DOCKER_HUB_USER
-    - secure: "J0T+zrRBBzBnxoioCD378cRSJUF8Vms32QMmrENVVfuJl03oBQv0QxSatLEiD4PtRPrN00mJ8/k/HdqFQ0SN1yg6a00duOZ6C9jk6t/fExBO1LNhp3Z7lcaMUrNEyRN6sgfVeznDVTGj9jBQU2HNlwHk0UD9BNp/k+Bjhrtw7Njp9JTLZKBgxrXk0WZmfk0d75Q+9DajA1j2tSfWVpwzv6HMGfqIH1wsVEakBY+tnaE6EO3IdzdWHhf/iV+Tx0tL0Qz/6mejgSuoGLTJLmeTrceTTmsDlN3B95y+XfcYDs6EP7gpzN8Ffg/mLV8xJ2Myj7+b1o+smMJZE5tLuPIeAu0YsfkPNa/tNLotOlDxF72per0kXyNYbRf+JrpxiOu9pLCtdtd40V2SsiNhpQqHVy+b+wkkqo2syTHT+9UNkqEi3WFm6TqFuOeQNtDm6R0hRl/Talw/ZEeKs68z1Cf6VyBrZG5LqtOurtWlKwXCe/Tr1i2g4BEAcbywphtCCcfgMK9YSGQnjKkGk6k9gVEa2bneYLZz1RSh2OpXnIsIJOX7X0hNd5xtQDLgbpSUlKwVcEriWeGe12GCszKNX9gdEo2bHeq4xAJ6BE+ot745z9dc+nC2BJ6Su+I5L6zBg4m2FWn0TWhPvz/6JR26t6ls/E7m+hkwJTCHnIUiFmmzpEw="
+  - secure: NtPv0M7iqqwe1RYmezmF22jPm8aXRPZH0MODGNHm4424jb5Tor+1lJKUMp+5197JUmG8y4yA/BLATfhRrlQ9Dr9L0EKD5RNkBU7srLLgB/mZCoqIG45+D3SDWO8raCLdgqekd43K6MXpLSbtgdoFm96wZwpfE9MQGe7uKOr4JeKbdobNT4Bb4oxDnCuBU0KWW0EiQqYjblRQvhxTLiCoEbemN2dL/I0/tBAlyC5kWDl531/6NHKtgbcp1mP9gY6BhgSq9LDkvXeMmKx3praAebdtG+we3basiH8YPcGDzU0QSQBTOenyZqjCA/zwrzGrLfa5czfZjw6/X6/NV9CCrIoMqnG8O+PFhkegvA5TiwP+q6kjsFjYZv5SyzSMX7FM4rALrlLcGTI52p7vysBpLAIgi6w/QlYJPURT+1AcTKFic7tef29KDcrF6kPCY9nNd475goag+e45tPSQVZkfdvG+NyhENjkpx3QQaJWfGBuZcIaztjaLGJ10tZeU0sV76Aa53aXqpLHfyRuvl+nmLw8aLq+BxlWjZ0BGAhs2da2e92ADCdsZcEmhQGb2UfL6x8bqcaBVLxeBhD3xp+VyrtXf9Cip1yDyFqGNxHxwnAN15JMGAzWTlxDK1ppUrXp7Bgr5IV4lzYCWysxDmbQPMHaTC2ut3em5t7W9xhHf+no=
     # DOCKER_HUB_PASSWORD
-    - secure: "RLzlMhfLqwSBrZqJOVOd61suXBn+HtUR3vOZfuFYF/Qmjjj5TE41+rObZmzc54hP/ZL+OH6blnibpvfDXlX+eN38ivFQfuxkJIGL68SJsEwNBRwW39Yw6Hl5RdI41MLCH7ByN15wifLp1JKBilHJ7XGMOUjI7P0yl7JjX8GBXUCtJbVLRugo80/yn+XQ1NdnlpbpYHNjMEQFWSODPa3pSK5McWvyQjDZDgS+IkdrZmIYJPMa7bmKH5I/edUPSmXQT905FgEwq9u8XR0SyBopli21EK9l6GkXIIvmDTYz5vT26Apvi2B4Aoazlklg+KNRUJuLGerpt6kbnU0gMSUChVkFfFhOk6GRSN3a/AUfD2FOudvMhet2QvlPHx+GYdEUr5XVo5HW42pHsqfD6eDtHd8VLTsHP0q4C8V85fNMv21lkkehy2ry8fx/RRy6x4O2wg2mua+79UkGKXp75gMKzWEcth34PCFCOu37l2F8R/ANnrQ52K/8vIQ88TtU2OpYX89fHjLojBxu+WKEBGZH2LRPsZBOUHeeO5C/xKDrhZU24ORnMW8wg66Qg5GIX1KI4a8yp73Mpues5hzpJ6wkMuRrQt40ymKndLCjv8KSd+5BfP6Or/KIrzDNYdZaasjk7JNi6rcZmm9d3fTAo+Ja/mjpUCIOo3SX14luzVCJIig="
+    - secure: W73SSENUYrQ/H2dzrcFKAMe1SqkAUXs2fvqVbP86ukw9LMm7yP4IT8/9NiQrFqxZaMePhD14/hfejb5MgoVBZMTXIihrH+WG7iPcezrDBbUmDb4DeHSABs4H7BfuUlw9F8/b4lTfudxjfn9XCh01eED7XM7asUkzX8mKcT5hroKW7sVDmoMXOiwtWq4xzpHYuuRFFuQE/Lvlr/r1aECAppXkwa8W5uIUgKn9Nrhz4JR/f8L+EBNOBS0UwblAoiU+QfD7px7niIO/l1qBcaaihVHpaGt6s2+YVQ1GlhfUUbSKjsNIv1o761LmuHc0w6pMFGLy4c/US9QKzWDYN+qzZxzPPIonWrZ4jXfEsDvX56Uw7h7OHl8/K28yX3vEXLiWttIrEMNfT5H/HkDqFEc5KQOXuVKuW1czyabqP2zVGFVzXEmgeTuGJHCs245yChKr8GoKAQA8RM2869ZOuNfbxTAXmlCZRspU9YHZ9QYw0OrUfpQFFZVHoDdCnziNoKVFuBt+DUdPaKxxtZnUhFt5dXyyMj9CK9ywmCPIuqnJ2YU0KakwPm0zczojeexZvRraAaCHqyKV5ewx0l+SllQfpg7G9UWlq6gFodUuuEMSN/hssWMXoyqe0iLRD52veftFvOxdgMQCkrYFnzeoipsRoAwiBfh6uuoLr1YfNM4mNt4=
+    # OSXSDK_PASSWORD
+      - secure: nhJpIICvP5GEFZx7FsczM3GfAwDcyAuW0afJhBI0fi+TblCLL6WuiCOjFRC9I0TGR6W8JGuUIkXixNi7cm0PqUuv+1gPzXW9JXR/4oXkgG+8Sy7n/8l9DWNLVDWtcss9m/BsgchQTFuWECSeY26yhJcizy01xh/d1Czgi/49JtLSzz4KbOu+BsZOgecFzGg2u8BAdOX305SA2TO9neUkXgZsXse0GyHjUHPuMTx0XNQjEC3rgcXTigCr2/x4rHaTWjblgidoDD2b30mvzUvJ9yEYR52/ohJ+dEpLo7o8RPMJe3QeIX6QrNOGWww/6hWDZNu1zStSWbYT/xlvL/U1OZakiuQHi7e2IiL668WV0/W1/OtEu/Iu/UDv9hGezuK9hqOa63P+OJBqDu0LMgODY9Of25agMpXgB6C+uBFylq5KRlG7VuGxSAqk3Z8ynXEhOwEMJ166KPtPgr2rolPhImnbt8EvJp1ckYb+RwZDGB9HSwYcgU8LEw3FFWqY9cqe8/QR1d0/7GkMLAEC/xtwP8dtQW8jCxacD5csKLSTRsbpcYVV0VTVeddAHxU8hzkcVTjK0IMSsbC4k4x5iFxBJtL+SDrPb8GULFjEPmH4oaBJ//22ntHlvOHoLqmk/dh2/LFR9oANDrn2nbSGCRu7tx9SlWKR5yXNCNW0XozmofU=
+
     - MAKEJOBS=-j5
     - RUN_TESTS=false
     - CHECK_DOC=0
@@ -43,7 +46,7 @@ env:
     - CCACHE_TEMPDIR=/tmp/.ccache-temp
     - CCACHE_COMPRESS=1
     - BASE_OUTDIR=$TRAVIS_BUILD_DIR/out
-    - SDK_URL=https://bitcoincore.org/depends-sources/sdks
+    - SDK_URL=https://github.com/mazanetwork/maza-dependency-sources/raw/master/sdk-sources/
     - PYTHON_DEBUG=1
     - WINEDEBUG=fixme-all
     - DOCKER_BUILD=false
@@ -86,7 +89,7 @@ before_script:
     - python3 -c 'import os,sys,fcntl; flags = fcntl.fcntl(sys.stdout, fcntl.F_GETFL); fcntl.fcntl(sys.stdout, fcntl.F_SETFL, flags&~os.O_NONBLOCK);'
     #- if [ "$CHECK_DOC" = 1 ]; then contrib/devtools/check-doc.py; fi TODO reenable after all Bitcoin PRs have been merged and docs fully fixed
     - mkdir -p depends/SDKs depends/sdk-sources
-    - if [ -n "$OSX_SDK" -a ! -f depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz ]; then curl --location --fail $SDK_URL/MacOSX${OSX_SDK}.sdk.tar.gz -o depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz; fi
+    -  if [ -n "$OSX_SDK" -a ! -f depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz.gpg ]; then curl --location --fail $SDK_URL/MacOSX${OSX_SDK}.sdk.tar.gz.gpg -o depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz.gpg && gpg --passphrase $OSXSDK_PASSWORD --symmetric --output depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz.gpg ;fi
     - if [ -n "$OSX_SDK" -a -f depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz ]; then tar -C depends/SDKs -xf depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz; fi
     # Deps should already be built, copies packages 
     - make $MAKEJOBS -C depends HOST=$HOST $DEP_OPTS
@@ -128,7 +131,7 @@ jobs:
         - CACHE_NAME=CrossMac HOST=x86_64-apple-darwin11 PPA="ppa:bitcoin/bitcoin" PACKAGES="cmake imagemagick libcap-dev librsvg2-bin libz-dev libbz2-dev libtiff-tools python3-dev" BITCOIN_CONFIG="--enable-gui --enable-reduce-exports" OSX_SDK=10.11 GOAL="deploy"
       script: 
         - mkdir -p depends/SDKs depends/sdk-sources
-        - if [ -n "$OSX_SDK" -a ! -f depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz ]; then curl --location --fail $SDK_URL/MacOSX${OSX_SDK}.sdk.tar.gz -o depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz; fi
+        -  if [ -n "$OSX_SDK" -a ! -f depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz.gpg ]; then curl --location --fail $SDK_URL/MacOSX${OSX_SDK}.sdk.tar.gz.gpg -o depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz.gpg && gpg --passphrase $OSXSDK_PASSWORD  --symmetric --output depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz.gpg ;fi
         - if [ -n "$OSX_SDK" -a -f depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz ]; then tar -C depends/SDKs -xf depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz; fi
         - make $MAKEJOBS -C depends HOST=$HOST $DEP_OPTS
     - stage: prepcache
@@ -154,7 +157,7 @@ jobs:
         - CACHE_NAME=Win64 HOST=x86_64-w64-mingw32 DPKG_ADD_ARCH="i386" DEP_OPTS="NO_QT=1" PPA="ppa:bitcoin/bitcoin" PACKAGES="python3 nsis g++-mingw-w64-x86-64 wine1.7 bc" RUN_TESTS=true GOAL="install" BITCOIN_CONFIG="--enable-gui --enable-reduce-exports" MAKEJOBS="-j4"
       script: 
         - mkdir -p depends/SDKs depends/sdk-sources
-        - if [ -n "$OSX_SDK" -a ! -f depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz ]; then curl --location --fail $SDK_URL/MacOSX${OSX_SDK}.sdk.tar.gz -o depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz; fi
+        -  if [ -n "$OSX_SDK" -a ! -f depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz.gpg ]; then curl --location --fail $SDK_URL/MacOSX${OSX_SDK}.sdk.tar.gz.gpg -o depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz.gpg && gpg --passphrase $OSXSDK_PASSWORD  --symmetric --output depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz.gpg ;fi
         - if [ -n "$OSX_SDK" -a -f depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz ]; then tar -C depends/SDKs -xf depends/sdk-sources/MacOSX${OSX_SDK}.sdk.tar.gz; fi
         - make $MAKEJOBS -C depends HOST=$HOST $DEP_OPTS
     - stage: prepcache
